@@ -20,7 +20,6 @@ extensions = [
     SortExtension(),
     TokenPaginationExtension(),
     ContextExtension(),
-    FilterExtension()
 ]
 
 get_request_model = create_get_request_model(extensions)

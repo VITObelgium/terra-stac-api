@@ -1,7 +1,6 @@
 import os
 
 from fastapi import Security
-from fastapi_resource_server import GrantType
 from stac_fastapi.api.app import StacApi
 from stac_fastapi.api.models import create_get_request_model, create_post_request_model
 from stac_fastapi.api.routes import Scope
@@ -25,7 +24,7 @@ from stac_fastapi.extensions.core import (
 from stac_fastapi.extensions.third_party import BulkTransactionExtension
 from starlette.middleware.authentication import AuthenticationMiddleware
 
-from terra_stac_api.auth import OIDC, on_auth_error
+from terra_stac_api.auth import OIDC, on_auth_error, GrantType
 
 settings = ElasticsearchSettings()
 session = Session.create_from_settings(settings)

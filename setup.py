@@ -10,6 +10,14 @@ setup(
     description="Terra-STAC-API",
     packages=find_packages(),
     install_requires=[
-        "stac-fastapi.elasticsearch==0.3.0"
+        "stac-fastapi.elasticsearch==0.3.0",
+        "python-jose==3.3.0"
+    ],
+    test_suite="tests",
+    tests_require=[
+        "pytest",
+        "pytest-asyncio",
+        "pytest-elasticsearch",
+        "httpx"
     ]
 )

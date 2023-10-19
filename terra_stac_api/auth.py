@@ -11,7 +11,8 @@ from fastapi.openapi.models import OAuthFlows, OAuthFlowPassword, OAuthFlowAutho
 from fastapi.security.base import SecurityBase
 from fastapi.security.utils import get_authorization_scheme_param
 from jose import jwt, JWTError
-from starlette.authentication import AuthenticationBackend, BaseUser, SimpleUser, AuthCredentials, AuthenticationError
+from starlette.authentication import AuthenticationBackend, BaseUser, SimpleUser, AuthCredentials, AuthenticationError, \
+    UnauthenticatedUser
 from starlette.requests import HTTPConnection
 from starlette.responses import JSONResponse
 from starlette.status import HTTP_403_FORBIDDEN, HTTP_401_UNAUTHORIZED
@@ -22,6 +23,9 @@ class GrantType(str, Enum):
     CLIENT_CREDENTIALS = "client_credentials"
     IMPLICIT = "implicit"
     PASSWORD = "password"
+
+
+ROLE_ANONYMOUS = "anonymous"
 
 
 def fetch_well_known(issuer: str) -> dict:
@@ -99,13 +103,15 @@ class OIDC(SecurityBase, AuthenticationBackend):
         scheme, param = get_authorization_scheme_param(authz_header)
 
         if not authz_header or scheme.lower() != "bearer":
-            return
+            return AuthCredentials([ROLE_ANONYMOUS]), UnauthenticatedUser()
 
         try:
             claims = jwt.decode(param, self.jwks, options=self.jwt_decode_options)
+            scopes = claims['realm_access']['roles']
+            scopes.append(ROLE_ANONYMOUS)
         except JWTError:
             raise AuthenticationError("Invalid token")
-        return AuthCredentials(claims['realm_access']['roles']), SimpleUser(claims['preferred_username'])
+        return AuthCredentials(scopes), SimpleUser(claims['preferred_username'])
 
     def require_any_role(self, *roles: str) -> Callable:
         async def _role_require(request: Request, authenticated=Depends(self)):

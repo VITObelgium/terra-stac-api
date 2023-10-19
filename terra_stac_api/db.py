@@ -1,0 +1,44 @@
+from typing import Iterable, Dict, Any, List, Union, Optional
+
+from stac_fastapi.elasticsearch.database_logic import DatabaseLogic, COLLECTIONS_INDEX, ES_COLLECTIONS_MAPPINGS
+
+ES_COLLECTIONS_MAPPINGS["properties"]["_auth"] = {
+    "type": "object",
+    "properties": {
+        "read": {"type": "keyword"},
+        "write": {"type": "keyword"}
+    }
+}
+
+
+class DatabaseLogicAuth(DatabaseLogic):
+
+    async def get_all_authorized_collections(
+            self,
+            authorizations: List[str],
+            _source: Union[List[str], str, bool, None] = None
+    ) -> Iterable[Dict[str, Any]]:
+        # TODO: should be paginated
+        # TODO: implement caching?
+        # https://github.com/stac-utils/stac-fastapi-elasticsearch/issues/65
+        collections = await self.client.search(
+            index=COLLECTIONS_INDEX,
+            query={
+                "bool": {
+                    "must": [
+                        {
+                            "terms": {
+                                "_auth.read": authorizations
+                            }
+                        }
+                    ]
+                }
+            },
+            size=1000,
+            _source=_source
+        )
+        return (c["_source"] for c in collections["hits"]["hits"])
+
+    async def indices(self, collection_ids: Optional[List[str]]) -> str:
+        if collection_ids is None:
+            return

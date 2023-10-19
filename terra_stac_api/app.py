@@ -12,6 +12,7 @@ from stac_fastapi.elasticsearch.core import (
     BulkTransactionsClient
 )
 from stac_fastapi.elasticsearch.database_logic import create_collection_index
+from stac_fastapi.elasticsearch.extensions import QueryExtension
 from stac_fastapi.elasticsearch.session import Session
 from stac_fastapi.extensions.core import (
     ContextExtension,
@@ -25,6 +26,7 @@ from stac_fastapi.extensions.third_party import BulkTransactionExtension
 from starlette.middleware.authentication import AuthenticationMiddleware
 
 from terra_stac_api.auth import OIDC, on_auth_error, GrantType
+from terra_stac_api.core import CoreClientAuth
 
 settings = ElasticsearchSettings()
 session = Session.create_from_settings(settings)
@@ -43,6 +45,7 @@ extensions = [
     BulkTransactionExtension(client=BulkTransactionsClient(session=session)),
     FieldsExtension(),
     FilterExtension(client=EsAsyncBaseFiltersClient()),
+    QueryExtension(),
     SortExtension(),
     TokenPaginationExtension(),
     ContextExtension(),
@@ -54,7 +57,7 @@ post_request_model = create_post_request_model(extensions)
 api = StacApi(
     settings=settings,
     extensions=extensions,
-    client=CoreClient(session=session, post_request_model=post_request_model),
+    client=CoreClientAuth(session=session, post_request_model=post_request_model),
     search_get_request_model=get_request_model,
     search_post_request_model=post_request_model,
     route_dependencies=[

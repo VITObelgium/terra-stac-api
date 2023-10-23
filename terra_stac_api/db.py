@@ -2,6 +2,8 @@ from typing import Iterable, Dict, Any, List, Union, Optional
 
 from stac_fastapi.elasticsearch.database_logic import DatabaseLogic, COLLECTIONS_INDEX, ES_COLLECTIONS_MAPPINGS
 
+from terra_stac_api.auth import ROLE_ADMIN
+
 ES_COLLECTIONS_MAPPINGS["properties"]["_auth"] = {
     "type": "object",
     "properties": {
@@ -21,9 +23,7 @@ class DatabaseLogicAuth(DatabaseLogic):
         # TODO: should be paginated
         # TODO: implement caching?
         # https://github.com/stac-utils/stac-fastapi-elasticsearch/issues/65
-        collections = await self.client.search(
-            index=COLLECTIONS_INDEX,
-            query={
+        query = None if ROLE_ADMIN in authorizations else {
                 "bool": {
                     "must": [
                         {
@@ -33,12 +33,11 @@ class DatabaseLogicAuth(DatabaseLogic):
                         }
                     ]
                 }
-            },
+            }
+        collections = await self.client.search(
+            index=COLLECTIONS_INDEX,
+            query=query,
             size=1000,
             _source=_source
         )
         return (c["_source"] for c in collections["hits"]["hits"])
-
-    async def indices(self, collection_ids: Optional[List[str]]) -> str:
-        if collection_ids is None:
-            return

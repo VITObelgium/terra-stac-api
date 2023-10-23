@@ -1,18 +1,24 @@
-from datetime import datetime as datetime_type
 from enum import Enum
-from typing import List, Optional, Union
+from typing import List
 from urllib.parse import urljoin
 
+import attr
+from fastapi import Request, HTTPException
 from overrides import overrides
-from stac_fastapi.elasticsearch.core import CoreClient, NumType
+from stac_fastapi.elasticsearch.core import CoreClient, TransactionsClient
+from stac_fastapi.elasticsearch.serializers import CollectionSerializer
+from stac_fastapi.types import stac as stac_types
 from stac_fastapi.types.search import BaseSearchPostRequest
 from stac_fastapi.types.stac import Collections, Collection, ItemCollection, Item
-from fastapi import Request
 from stac_pydantic.links import Relations
 from stac_pydantic.shared import MimeTypes
+from starlette import status
 
+from terra_stac_api.auth import ROLE_ADMIN, ROLE_ANONYMOUS
 from terra_stac_api.db import DatabaseLogicAuth
 from terra_stac_api.errors import ForbiddenError
+
+_auth = "_auth"
 
 
 class AccessType(str, Enum):
@@ -25,9 +31,14 @@ def any_role_match(user_roles: List[str], resource_roles: List[str]) -> bool:
 
 
 def is_authorized_for_collection(scopes: List[str], collection: dict, access_type: AccessType) -> bool:
-    return any_role_match(scopes, collection['_auth'][access_type.value])
+    return is_admin(scopes) or any_role_match(scopes, collection[_auth][access_type.value])
 
 
+def is_admin(scopes: List[str]) -> bool:
+    return ROLE_ADMIN in scopes
+
+
+@attr.s
 class CoreClientAuth(CoreClient):
     database = DatabaseLogicAuth()
 
@@ -93,3 +104,87 @@ class CoreClientAuth(CoreClient):
         return await super().post_search(search_request, **kwargs)
 
 
+@attr.s
+class TransactionsClientAuth(TransactionsClient):
+    """
+    TransactionsClient class which implements checking on the authorizations stored in the collection.
+    Also makes sure that authorizations are configured on the collections.
+    Note that no existing authorizations are checked for the :func:`create_collection` method.
+    """
+    database = DatabaseLogicAuth()
+
+    async def ensure_authorized(self, request: Request, collection_id: str):
+        collection = await self.database.find_collection(collection_id=collection_id)
+        if not is_authorized_for_collection(request.auth.scopes, collection, AccessType.WRITE):
+            raise ForbiddenError(f"Insufficient permissions")
+
+    async def ensure_collection_auth_present(
+            self,
+            collection: stac_types.Collection,
+            request: Request
+    ) -> stac_types.Collection:
+        """
+        Make sure the collection authorizations are set. They can be provided either in the collection body (_auth)
+        or the HTTP request parameters (_auth_read, _auth_write).
+        Also make sure only admin users can publish public collections.
+
+        :param collection: collection
+        :param request: request object
+        :return:
+        """
+        if _auth not in collection:
+            collection[_auth] = dict()
+
+        for at in AccessType:
+            param = f"{_auth}_{at.value}"
+            if param in request.query_params:
+                collection[_auth][at.value] = request.query_params.get(param)
+        if (
+            not (AccessType.READ.value in collection[_auth] and AccessType.WRITE.value in collection[_auth])
+            or ROLE_ANONYMOUS in collection[_auth][AccessType.WRITE.value]
+            or (ROLE_ANONYMOUS in collection[_auth][AccessType.READ.value] and ROLE_ADMIN not in request.auth.scopes)
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid collection authorizations"
+            )
+        return collection
+
+    @overrides
+    async def create_item(self, collection_id: str, item: stac_types.Item, **kwargs) -> stac_types.Item:
+        await self.ensure_authorized(kwargs["request"], collection_id)
+        return await super().create_item(collection_id, item, **kwargs)
+
+    @overrides
+    async def update_item(self, collection_id: str, item_id: str, item: stac_types.Item, **kwargs) -> stac_types.Item:
+        await self.ensure_authorized(kwargs["request"], collection_id)
+        return await super().update_item(collection_id, item_id, item, **kwargs)
+
+    @overrides
+    async def delete_item(self, item_id: str, collection_id: str, **kwargs) -> stac_types.Item:
+        await self.ensure_authorized(kwargs["request"], collection_id)
+        return await super().delete_item(item_id, collection_id, **kwargs)
+
+    @overrides
+    async def create_collection(self, collection: stac_types.Collection, **kwargs) -> stac_types.Collection:
+        collection = await self.ensure_collection_auth_present(collection, kwargs["request"])
+        return await super().create_collection(collection, **kwargs)
+
+    @overrides
+    async def update_collection(self, collection: stac_types.Collection, **kwargs) -> stac_types.Collection:
+        await self.ensure_authorized(kwargs["request"], collection["id"])
+        collection = await self.ensure_collection_auth_present(collection, kwargs["request"])
+
+        base_url = str(kwargs["request"].base_url)
+
+        # not needed because ensure_authorized already checks whether the collection exists
+        # await self.database.find_collection(collection_id=collection["id"])
+        await self.database.delete_collection(collection_id=collection["id"])  # fix call and bypass second authorization check
+        await self.create_collection(collection, **kwargs)
+
+        return CollectionSerializer.db_to_stac(collection, base_url)
+
+    @overrides
+    async def delete_collection(self, collection_id: str, **kwargs) -> stac_types.Collection:
+        await self.ensure_authorized(kwargs["request"], collection_id)
+        return await super().delete_collection(collection_id, **kwargs)

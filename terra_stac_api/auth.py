@@ -1,4 +1,5 @@
 import json
+import os
 import typing
 import urllib.parse
 import urllib.request
@@ -128,3 +129,7 @@ class OIDC(SecurityBase, AuthenticationBackend):
                 detail="Not authenticated",
                 headers={"WWW-Authenticate": "Bearer"}
             )
+
+
+ROLE_ADMIN = os.getenv("ROLE_ADMIN")
+ROLE_EDITOR = os.getenv("ROLE_EDITOR")

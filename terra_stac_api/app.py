@@ -6,8 +6,7 @@ from stac_fastapi.api.models import create_get_request_model, create_post_reques
 from stac_fastapi.api.routes import Scope
 from stac_fastapi.elasticsearch.config import ElasticsearchSettings
 from stac_fastapi.elasticsearch.core import (
-    EsAsyncBaseFiltersClient,
-    BulkTransactionsClient
+    EsAsyncBaseFiltersClient
 )
 from stac_fastapi.elasticsearch.database_logic import create_collection_index
 from stac_fastapi.elasticsearch.extensions import QueryExtension
@@ -24,7 +23,7 @@ from stac_fastapi.extensions.third_party import BulkTransactionExtension
 from starlette.middleware.authentication import AuthenticationMiddleware
 
 from terra_stac_api.auth import OIDC, on_auth_error, GrantType, ROLE_ADMIN, ROLE_EDITOR
-from terra_stac_api.core import CoreClientAuth, TransactionsClientAuth
+from terra_stac_api.core import CoreClientAuth, TransactionsClientAuth, BulkTransactionsClientAuth
 
 settings = ElasticsearchSettings()
 session = Session.create_from_settings(settings)
@@ -37,7 +36,7 @@ auth = OIDC(
 
 extensions = [
     TransactionExtension(client=TransactionsClientAuth(session=session), settings=settings),
-    BulkTransactionExtension(client=BulkTransactionsClient(session=session)),
+    BulkTransactionExtension(client=BulkTransactionsClientAuth(session=session)),
     FieldsExtension(),
     FilterExtension(client=EsAsyncBaseFiltersClient()),
     QueryExtension(),

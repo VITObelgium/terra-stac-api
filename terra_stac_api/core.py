@@ -1,12 +1,13 @@
 from enum import Enum
-from typing import List
+from typing import List, Optional
 from urllib.parse import urljoin
 
 import attr
 from fastapi import Request, HTTPException
 from overrides import overrides
-from stac_fastapi.elasticsearch.core import CoreClient, TransactionsClient
+from stac_fastapi.elasticsearch.core import CoreClient, TransactionsClient, BulkTransactionsClient
 from stac_fastapi.elasticsearch.serializers import CollectionSerializer
+from stac_fastapi.extensions.third_party.bulk_transactions import Items
 from stac_fastapi.types import stac as stac_types
 from stac_fastapi.types.search import BaseSearchPostRequest
 from stac_fastapi.types.stac import Collections, Collection, ItemCollection, Item
@@ -32,6 +33,28 @@ def any_role_match(user_roles: List[str], resource_roles: List[str]) -> bool:
 
 def is_authorized_for_collection(scopes: List[str], collection: dict, access_type: AccessType) -> bool:
     return is_admin(scopes) or any_role_match(scopes, collection[_auth][access_type.value])
+
+
+async def ensure_authorized_for_collection(
+        db: DatabaseLogicAuth,
+        scopes: List[str],
+        collection_id: str,
+        access_type: AccessType
+):
+    collection = await db.find_collection(collection_id=collection_id)
+    if not is_authorized_for_collection(scopes, collection, access_type):
+        raise ForbiddenError(f"Insufficient permissions for collection {collection_id}")
+
+
+def sync_ensure_authorized_for_collection(
+        db: DatabaseLogicAuth,
+        scopes: List[str],
+        collection_id: str,
+        access_type: AccessType
+):
+    collection = db.sync_find_collection(collection_id=collection_id)
+    if not is_authorized_for_collection(scopes, collection, access_type):
+        raise ForbiddenError(f"Insufficient permissions for collection {collection_id}")
 
 
 def is_admin(scopes: List[str]) -> bool:
@@ -113,11 +136,6 @@ class TransactionsClientAuth(TransactionsClient):
     """
     database = DatabaseLogicAuth()
 
-    async def ensure_authorized(self, request: Request, collection_id: str):
-        collection = await self.database.find_collection(collection_id=collection_id)
-        if not is_authorized_for_collection(request.auth.scopes, collection, AccessType.WRITE):
-            raise ForbiddenError(f"Insufficient permissions")
-
     async def ensure_collection_auth_present(
             self,
             collection: stac_types.Collection,
@@ -140,9 +158,10 @@ class TransactionsClientAuth(TransactionsClient):
             if param in request.query_params:
                 collection[_auth][at.value] = request.query_params.get(param)
         if (
-            not (AccessType.READ.value in collection[_auth] and AccessType.WRITE.value in collection[_auth])
-            or ROLE_ANONYMOUS in collection[_auth][AccessType.WRITE.value]
-            or (ROLE_ANONYMOUS in collection[_auth][AccessType.READ.value] and ROLE_ADMIN not in request.auth.scopes)
+                not (AccessType.READ.value in collection[_auth] and AccessType.WRITE.value in collection[_auth])
+                or ROLE_ANONYMOUS in collection[_auth][AccessType.WRITE.value]
+                or (
+                ROLE_ANONYMOUS in collection[_auth][AccessType.READ.value] and ROLE_ADMIN not in request.auth.scopes)
         ):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -152,17 +171,20 @@ class TransactionsClientAuth(TransactionsClient):
 
     @overrides
     async def create_item(self, collection_id: str, item: stac_types.Item, **kwargs) -> stac_types.Item:
-        await self.ensure_authorized(kwargs["request"], collection_id)
+        await ensure_authorized_for_collection(self.database, kwargs["request"].auth.scopes, collection_id,
+                                               AccessType.WRITE)
         return await super().create_item(collection_id, item, **kwargs)
 
     @overrides
     async def update_item(self, collection_id: str, item_id: str, item: stac_types.Item, **kwargs) -> stac_types.Item:
-        await self.ensure_authorized(kwargs["request"], collection_id)
+        await ensure_authorized_for_collection(self.database, kwargs["request"].auth.scopes, collection_id,
+                                               AccessType.WRITE)
         return await super().update_item(collection_id, item_id, item, **kwargs)
 
     @overrides
     async def delete_item(self, item_id: str, collection_id: str, **kwargs) -> stac_types.Item:
-        await self.ensure_authorized(kwargs["request"], collection_id)
+        await ensure_authorized_for_collection(self.database, kwargs["request"].auth.scopes, collection_id,
+                                               AccessType.WRITE)
         return await super().delete_item(item_id, collection_id, **kwargs)
 
     @overrides
@@ -172,7 +194,8 @@ class TransactionsClientAuth(TransactionsClient):
 
     @overrides
     async def update_collection(self, collection: stac_types.Collection, **kwargs) -> stac_types.Collection:
-        await self.ensure_authorized(kwargs["request"], collection["id"])
+        await ensure_authorized_for_collection(self.database, kwargs["request"].auth.scopes, collection["id"],
+                                               AccessType.WRITE)
         collection = await self.ensure_collection_auth_present(collection, kwargs["request"])
 
         base_url = str(kwargs["request"].base_url)
@@ -186,5 +209,24 @@ class TransactionsClientAuth(TransactionsClient):
 
     @overrides
     async def delete_collection(self, collection_id: str, **kwargs) -> stac_types.Collection:
-        await self.ensure_authorized(kwargs["request"], collection_id)
+        await ensure_authorized_for_collection(self.database, kwargs["request"].auth.scopes, collection_id,
+                                               AccessType.WRITE)
         return await super().delete_collection(collection_id, **kwargs)
+
+
+@attr.s
+class BulkTransactionsClientAuth(BulkTransactionsClient):
+    database = DatabaseLogicAuth()
+
+    async def bulk_item_insert(self, items: Items, chunk_size: Optional[int] = None, **kwargs) -> str:
+        request: Request = kwargs["request"]
+        collection_id = request.path_params.get("collection_id")
+        sync_ensure_authorized_for_collection(
+            self.database, request.auth.scopes, collection_id, AccessType.WRITE
+        )
+        if not all(i["collection"] == collection_id for i in items.items.values()):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Item collection doesn't match collection path parameter {collection_id}"
+            )
+        return super().bulk_item_insert(items, chunk_size, refresh="wait_for", **kwargs)

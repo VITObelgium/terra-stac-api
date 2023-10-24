@@ -1,6 +1,9 @@
 from typing import Iterable, Dict, Any, List, Union, Optional
 
 from stac_fastapi.elasticsearch.database_logic import DatabaseLogic, COLLECTIONS_INDEX, ES_COLLECTIONS_MAPPINGS
+from stac_fastapi.types.errors import NotFoundError
+from stac_fastapi.types.stac import Collection
+from elasticsearch import exceptions
 
 from terra_stac_api.auth import ROLE_ADMIN
 
@@ -41,3 +44,11 @@ class DatabaseLogicAuth(DatabaseLogic):
             _source=_source
         )
         return (c["_source"] for c in collections["hits"]["hits"])
+
+    def sync_find_collection(self, collection_id: str) -> Collection:
+        try:
+            collection = self.sync_client.get(index=COLLECTIONS_INDEX, id=collection_id)
+        except exceptions.NotFoundError:
+            raise NotFoundError(f"Collection {collection_id} not found")
+
+        return collection["_source"]

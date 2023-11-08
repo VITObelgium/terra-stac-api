@@ -65,7 +65,9 @@ api = StacApi(
             Scope(path="/collections/{collections_id}/bulk_items", method="POST")
          ],
          [Security(auth)])
-    ]
+    ],
+    title="terra-stac-api",
+    description="Terrascope STAC API"
 )
 app = api.app
 app.add_middleware(AuthenticationMiddleware, backend=auth, on_error=on_auth_error)

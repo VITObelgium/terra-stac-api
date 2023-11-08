@@ -111,8 +111,7 @@ class CoreClientAuth(CoreClient):
         return await super().get_item(item_id, collection_id, **kwargs)
 
     @overrides
-    async def post_search(self, search_request: BaseSearchPostRequest, **kwargs) -> ItemCollection:
-        request = kwargs["request"]
+    async def post_search(self, search_request: BaseSearchPostRequest, request: Request) -> ItemCollection:
         collections_authorized = {
             c["id"] for c
             in await self.database.get_all_authorized_collections(request.auth.scopes, _source=["id"])
@@ -124,7 +123,7 @@ class CoreClientAuth(CoreClient):
         else:
             # only search authorized collections
             search_request.collections = list(collections_authorized)
-        return await super().post_search(search_request, **kwargs)
+        return await super().post_search(search_request, request)
 
 
 @attr.s

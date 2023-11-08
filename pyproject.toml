@@ -1,0 +1,24 @@
+[project]
+name = "terra-stac-api"
+version = "0.0.1"
+description = "Terrascope STAC API"
+authors = [{name = "Stijn Caerts", email = "stijn.caerts@vito.be"}]
+dependencies = [
+    "stac-fastapi.elasticsearch==1.0.0",
+    "python-jose==3.3.0"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+    # "pytest-elasticsearch",
+    # "httpx"
+]
+
+[tool.setuptools]
+packages = ["terra_stac_api"]
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"

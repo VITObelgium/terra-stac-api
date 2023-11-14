@@ -155,7 +155,7 @@ class TransactionsClientAuth(TransactionsClient):
         for at in AccessType:
             param = f"{_auth}_{at.value}"
             if param in request.query_params:
-                collection[_auth][at.value] = request.query_params.get(param)
+                collection[_auth][at.value] = request.query_params.getlist(param)
         if (
                 not (AccessType.READ.value in collection[_auth] and AccessType.WRITE.value in collection[_auth])
                 or ROLE_ANONYMOUS in collection[_auth][AccessType.WRITE.value]

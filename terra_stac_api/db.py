@@ -1,9 +1,12 @@
 from typing import Iterable, Dict, Any, List, Union, Optional
 
-from stac_fastapi.elasticsearch.database_logic import DatabaseLogic, COLLECTIONS_INDEX, ES_COLLECTIONS_MAPPINGS
+from stac_fastapi.elasticsearch.database_logic import DatabaseLogic, COLLECTIONS_INDEX, ES_COLLECTIONS_MAPPINGS, index_by_collection_id
+import stac_fastapi.elasticsearch.database_logic
+from stac_fastapi.elasticsearch.config import AsyncElasticsearchSettings
 from stac_fastapi.types.errors import NotFoundError
 from stac_fastapi.types.stac import Collection
 from elasticsearch import exceptions
+from overrides import overrides
 
 from terra_stac_api.auth import ROLE_ADMIN
 
@@ -14,6 +17,31 @@ ES_COLLECTIONS_MAPPINGS["properties"]["_auth"] = {
         "write": {"type": "keyword"}
     }
 }
+
+async def fix_delete_item_index(collection_id: str):
+    """Delete the index for items in a collection.
+
+    Args:
+        collection_id (str): The ID of the collection whose items index will be deleted.
+    """
+    client = AsyncElasticsearchSettings().create_client
+
+    name = index_by_collection_id(collection_id)
+    index_info = await client.indices.get(index=name)
+    [index] = index_info.keys()
+    index_info = index_info[index]
+
+    if "aliases" in index_info and index_info["aliases"]:
+        [alias] = index_info["aliases"].keys()
+        await client.indices.delete_alias(index=index, name=alias)
+        await client.indices.delete(index=index)
+    else:
+        await client.indices.delete(index=index)
+    await client.close()
+
+
+# fix backwards compatibility for Elasticsearch versions without resolve functionality
+stac_fastapi.elasticsearch.database_logic.delete_item_index = fix_delete_item_index
 
 
 class DatabaseLogicAuth(DatabaseLogic):

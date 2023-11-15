@@ -8,8 +8,8 @@ su jenkins -c '
     set -e
     cd /tmp 
 
-    curl -O $ES_ARCHIVE https://artifacts.elastic.co/downloads/elasticsearch/$ES_ARCHIVE
-    curl -O $ES_ARCHIVE_SHA512 https://artifacts.elastic.co/downloads/elasticsearch/$ES_ARCHIVE_SHA512
+    curl -O https://artifacts.elastic.co/downloads/elasticsearch/$ES_ARCHIVE
+    curl -O https://artifacts.elastic.co/downloads/elasticsearch/$ES_ARCHIVE_SHA512
 
     sha512sum -c $ES_ARCHIVE_SHA512
     tar -xzf $ES_ARCHIVE

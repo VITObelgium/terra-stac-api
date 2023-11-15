@@ -36,3 +36,9 @@ If you don't want to store the collection authorizations in your STAC document, 
 ```http
 POST /collections?_auth_read=anonymoud&_auth_write=stac-admin&_auth_write=stac-editor
 ```
+
+## Testing
+Running the tests requires an active Elasticsearch cluster. By default, it will look for an Elasticsearch cluster on the local host, port 9200.
+
+In the Jenkins pipeline, we will run an Elasticsearch process in the test container. 
+If you want to run the tests locally, you can use the Docker compose file `elasticsearch/docker-compose.yml`.

@@ -11,6 +11,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest",
+    "pytest-env",
     "pytest-asyncio",
     # "pytest-elasticsearch",
     # "httpx"
@@ -18,6 +19,12 @@ dev = [
 
 [tool.setuptools]
 packages = ["terra_stac_api"]
+
+[tool.pytest_env]
+ES_HOST = {value = "0.0.0.0", skip_if_set = true}
+ES_PORT = {value = "9200", skip_if_set = true}
+ES_USE_SSL = {value = "false", skip_if_set = true}
+ES_VERIFY_CERTS = {value= "false", skip_if_set = true}
 
 [build-system]
 requires = ["setuptools", "wheel"]

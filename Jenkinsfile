@@ -8,5 +8,5 @@ pythonPipeline {
   dev_hosts             = 'docker-services-dev-01.vgt.vito.be'
   prod_hosts            = 'docker-services-prod-01.vgt.vito.be'
   docker_deploy         = true
-  run_tests             = false
+  extras_require        = 'dev'
 }

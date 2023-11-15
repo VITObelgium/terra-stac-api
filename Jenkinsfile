@@ -9,4 +9,5 @@ pythonPipeline {
   prod_hosts            = 'docker-services-prod-01.vgt.vito.be'
   docker_deploy         = true
   extras_require        = 'dev'
+  pre_test_script       = 'pre_test.sh'
 }

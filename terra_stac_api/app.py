@@ -1,6 +1,6 @@
 import os
 
-from fastapi import Security
+from fastapi import FastAPI, Security
 from stac_fastapi.api.app import StacApi
 from stac_fastapi.api.models import create_get_request_model, create_post_request_model
 from stac_fastapi.api.routes import Scope
@@ -21,6 +21,7 @@ from stac_fastapi.extensions.core import (
 )
 from stac_fastapi.extensions.third_party import BulkTransactionExtension
 from starlette.middleware.authentication import AuthenticationMiddleware
+from contextlib import asynccontextmanager
 
 from terra_stac_api.auth import OIDC, on_auth_error, GrantType, ROLE_ADMIN, ROLE_EDITOR
 from terra_stac_api.core import CoreClientAuth, TransactionsClientAuth, BulkTransactionsClientAuth
@@ -48,6 +49,11 @@ extensions = [
 get_request_model = create_get_request_model(extensions)
 post_request_model = create_post_request_model(extensions)
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await create_collection_index()
+    yield
+
 api = StacApi(
     settings=settings,
     extensions=extensions,
@@ -71,11 +77,7 @@ api = StacApi(
 )
 app = api.app
 app.add_middleware(AuthenticationMiddleware, backend=auth, on_error=on_auth_error)
-
-
-@app.on_event("startup")
-async def _startup_event():
-    await create_collection_index()
+app.router.lifespan_context = lifespan
 
 
 def run():

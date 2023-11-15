@@ -13,8 +13,8 @@ dev = [
     "pytest",
     "pytest-env",
     "pytest-asyncio",
+    "httpx"
     # "pytest-elasticsearch",
-    # "httpx"
 ]
 
 [tool.setuptools]

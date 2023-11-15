@@ -2,6 +2,8 @@ ES=elasticsearch-8.11.1
 ES_ARCHIVE=$ES-linux-x86_64.tar.gz
 ES_ARCHIVE_SHA512=$ES_ARCHIVE.sha512
 
+su jenkins  # elasticsearch fails to start when running as root
+
 curl -o /tmp/$ES_ARCHIVE https://artifacts.elastic.co/downloads/elasticsearch/$ES_ARCHIVE
 curl -o /tmp/$ES_ARCHIVE_SHA512 https://artifacts.elastic.co/downloads/elasticsearch/$ES_ARCHIVE_SHA512
 

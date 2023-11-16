@@ -16,6 +16,9 @@ su jenkins -c "
     # disable security
     cp -f ${WORKSPACE}/elasticsearch/elasticsearch.yml $ES/config/elasticsearch.yml
     # echo 'xpack.security.enabled: false' >> $ES/config/elasticsearch.yml
+    
+    # modify startup script for v7.5.1 (no ps command in Docker container)
+    sed -i '58,60d' ./$ES/bin/elasticsearch
 
-    ./$ES/bin/elasticsearch -d -p $ES.pid
+    ./$ES/bin/elasticsearch -d
 "

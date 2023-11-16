@@ -20,5 +20,5 @@ su jenkins -c "
     # modify startup script for v7.5.1 (no ps command in Docker container)
     sed -i '58,60d' ./$ES/bin/elasticsearch
 
-    ./$ES/bin/elasticsearch -d
+    ES_STARTUP_SLEEP_TIME=30 ./$ES/bin/elasticsearch -d
 "

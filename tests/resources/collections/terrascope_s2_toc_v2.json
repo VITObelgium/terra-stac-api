@@ -1,0 +1,45 @@
+{
+    "_auth": {
+        "read": ["anonymous"],
+        "write": ["sentinel2"]
+    },
+    "type": "Collection",
+    "stac_version": "1.0.0",
+    "id": "terrascope_s2_toc_v2",
+    "title": "Sentinel-2 Top of Canopy (TOC) Products (tiles) - V2",
+    "description": "L2A atmospheric corrected Top-Of-Canopy (TOC) products V2, generated using the Sen2COR processing tool.",
+    "license": "license",
+    "extent": {
+        "spatial": {
+            "bbox": [
+                [
+                    -180,
+                    -84,
+                    180,
+                    84
+                ]
+            ]
+        },
+        "temporal": {
+            "interval": [
+                [
+                    "2015-06-23T00:00:00Z",
+                    null
+                ]
+            ]
+        }
+    },
+    "summaries": {
+        "datetime": {
+            "min": "2015-06-23T00:00:00Z",
+            "max": null
+        },
+        "constellation": [
+            "sentinel-2"
+        ],
+        "instruments": [
+            "msi"
+        ]
+    },
+    "links": []
+}

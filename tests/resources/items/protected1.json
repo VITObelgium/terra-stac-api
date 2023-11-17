@@ -1,0 +1,54 @@
+{
+    "stac_version": "1.0.0",
+    "stac_extensions": [],
+    "type": "Feature",
+    "id": "protected1",
+    "bbox": [
+        5.0779672828819855,
+        51.21747856189404,
+        5.0804853169139506,
+        51.218680230783235
+    ],
+    "geometry": {
+        "coordinates": [
+            [
+                [
+                    5.0779672828819855,
+                    51.218680230783235
+                ],
+                [
+                    5.0779672828819855,
+                    51.21747856189404
+                ],
+                [
+                    5.0804853169139506,
+                    51.21747856189404
+                ],
+                [
+                    5.0804853169139506,
+                    51.218680230783235
+                ],
+                [
+                    5.0779672828819855,
+                    51.218680230783235
+                ]
+            ]
+        ],
+        "type": "Polygon"
+    },
+    "properties": {
+        "datetime": "2023-11-17T09:38:32.455Z"
+    },
+    "collection": "protected",
+    "links": [],
+    "assets": {
+        "visual": {
+            "href": "/data/MTDA/protected1.tiff",
+            "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+            "title": "Protected data",
+            "roles": [
+                "data"
+            ]
+        }
+    }
+}

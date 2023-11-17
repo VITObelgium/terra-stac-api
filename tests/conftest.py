@@ -24,8 +24,11 @@ def event_loop():
 def api():
     return terra_stac_api.app.api
 
-@pytest.fixture(scope="session")
-def app(api):
+@pytest_asyncio.fixture(scope="session")
+async def app(api):
+    # clear Elasticsearch on test startup to remove residues of previously failed or aborted tests
+    await api.client.database.delete_items()
+    await api.client.database.delete_collections()
     return api.app
 
 
@@ -52,7 +55,7 @@ def items():
         with open(p_path) as f:
             item = json.load(f)
         if item['collection'] not in items:
-            item['collection'] = []
+            items[item['collection']] = []
         items[item['collection']].append(item)
     return items
 

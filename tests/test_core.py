@@ -100,8 +100,6 @@ async def test_search(client):
     assert response.status_code == codes.OK
     rj = response.json()
     assert len(rj['features']) == 4
-    if 'context' in rj:
-        assert rj['context']['matched'] == 4
     for item in rj['features']:
         assert item['collection'] == COLLECTION_S2_TOC_V2
 

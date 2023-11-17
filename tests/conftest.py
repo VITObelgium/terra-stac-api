@@ -26,10 +26,13 @@ def api():
 
 @pytest_asyncio.fixture(scope="session")
 async def app(api):
-    # clear Elasticsearch on test startup to remove residues of previously failed or aborted tests
-    await api.client.database.delete_items()
-    await api.client.database.delete_collections()
-    return api.app
+    try:
+        # clear Elasticsearch on test startup to remove residues of previously failed or aborted tests
+        # these indices might not exist, so put in try block
+        await api.client.database.delete_items()
+        await api.client.database.delete_collections()
+    finally:
+        return api.app
 
 
 @pytest_asyncio.fixture(scope="session")

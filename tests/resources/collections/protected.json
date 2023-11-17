@@ -1,0 +1,34 @@
+{
+    "_auth": {
+        "read": ["protected"],
+        "write": ["stac-admin"]
+    },
+    "type": "Collection",
+    "stac_version": "1.0.0",
+    "id": "protected",
+    "title": "Protected collection",
+    "description": "Private collection protected via authentication",
+    "license": "license",
+    "extent": {
+        "spatial": {
+            "bbox": [
+                [
+                    -180,
+                    -84,
+                    180,
+                    84
+                ]
+            ]
+        },
+        "temporal": {
+            "interval": [
+                [
+                    "2015-06-23T00:00:00Z",
+                    null
+                ]
+            ]
+        }
+    },
+    "summaries": {},
+    "links": []
+}

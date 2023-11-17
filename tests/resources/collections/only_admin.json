@@ -1,0 +1,34 @@
+{
+    "_auth": {
+        "read": ["stac-admin"],
+        "write": ["stac-admin"]
+    },
+    "type": "Collection",
+    "stac_version": "1.0.0",
+    "id": "only_admin",
+    "title": "Collection only for admins",
+    "description": "Private collection only accessible by admin users",
+    "license": "license",
+    "extent": {
+        "spatial": {
+            "bbox": [
+                [
+                    -180,
+                    -84,
+                    180,
+                    84
+                ]
+            ]
+        },
+        "temporal": {
+            "interval": [
+                [
+                    "2015-06-23T00:00:00Z",
+                    null
+                ]
+            ]
+        }
+    },
+    "summaries": {},
+    "links": []
+}

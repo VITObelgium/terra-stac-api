@@ -7,23 +7,29 @@ from pathlib import Path
 from fastapi.testclient import TestClient
 
 import terra_stac_api.auth
-from tests.mock_oidc import MockAuth
-terra_stac_api.auth.OIDC = MockAuth
+from tests.mock_auth import MockAuthBackend
+terra_stac_api.auth.OIDC = MockAuthBackend
 
 import terra_stac_api.app
 
 RESOURCES = Path(__file__).parent / "resources"
 
-@pytest.fixture
+@pytest.fixture(scope="session")
+def event_loop():
+    loop = asyncio.get_event_loop()
+    yield loop
+    loop.close()
+
+@pytest.fixture(scope="session")
 def api():
     return terra_stac_api.app.api
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def app(api):
     return api.app
 
 
-@pytest_asyncio.fixture
+@pytest_asyncio.fixture(scope="session")
 async def client(app):
     async with AsyncClient(app=app, base_url="http://test") as tc:
         yield tc

@@ -14,7 +14,6 @@ dev = [
     "pytest-env",
     "pytest-asyncio",
     "httpx"
-    # "pytest-elasticsearch",
 ]
 
 [tool.setuptools]

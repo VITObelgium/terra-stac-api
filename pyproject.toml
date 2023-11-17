@@ -19,9 +19,6 @@ dev = [
 [tool.setuptools]
 packages = ["terra_stac_api"]
 
-[tool.pytest.ini_options]
-asyncio_mode = "auto"
-
 [tool.pytest_env]
 ES_HOST = {value = "0.0.0.0", skip_if_set = true}
 ES_PORT = {value = "9200", skip_if_set = true}

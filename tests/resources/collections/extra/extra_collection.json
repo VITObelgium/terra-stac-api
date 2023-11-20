@@ -1,13 +1,13 @@
 {
     "_auth": {
         "read": ["protected"],
-        "write": ["protected"]
+        "write": ["stac-admin"]
     },
     "type": "Collection",
     "stac_version": "1.0.0",
-    "id": "protected",
-    "title": "Protected collection",
-    "description": "Private collection protected via authentication",
+    "id": "extra_collection",
+    "title": "Extra collection",
+    "description": "Another extra collection to be added",
     "license": "license",
     "extent": {
         "spatial": {

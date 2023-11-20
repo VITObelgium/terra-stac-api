@@ -1,20 +1,8 @@
-from unittest.mock import Mock
-from terra_stac_api import auth
 from terra_stac_api.auth import ROLE_ANONYMOUS
 from terra_stac_api.core import _auth, AccessType
 from tests.mock_auth import MockAuth
 from httpx import codes
-from yarl import URL
-
-
-ROLE_PROTECTED = "protected"
-ROLE_ADMIN = "stac-admin"
-
-ENDPOINT_COLLECTIONS = URL("/collections")
-ENDPOINT_SEARCH = URL("/search")
-COLLECTION_PROTECTED = "protected"
-COLLECTION_S2_TOC_V2 = "terrascope_s2_toc_v2"
-
+from .constants import *
 
 def check_collections(roles, collections_response, collections_all):
     for c in collections_all:
@@ -28,28 +16,28 @@ async def test_landing_page(client, collections):
     response = await client.get("/")
     assert response.status_code == codes.OK
     response_collections = {l['href'].split("/collections/", 1)[1] for l in response.json()['links'] if l['rel'] == "child"}
-    check_collections((ROLE_ANONYMOUS,), response_collections, collections)
+    check_collections((ROLE_ANONYMOUS,), response_collections, collections.values())
 
 
 async def test_landing_page_authenticated(client, collections):
     response = await client.get("/", auth=MockAuth(ROLE_PROTECTED))
     assert response.status_code == codes.OK
     response_collections = {l['href'].split("/collections/", 1)[1] for l in response.json()['links'] if l['rel'] == "child"}
-    check_collections((ROLE_ANONYMOUS, ROLE_PROTECTED), response_collections, collections)
+    check_collections((ROLE_ANONYMOUS, ROLE_PROTECTED), response_collections, collections.values())
 
 
 async def test_collections(client, collections):
     response = await client.get(str(ENDPOINT_COLLECTIONS))
     assert response.status_code == codes.OK
     response_collections = {c['id'] for c in response.json()['collections']}
-    check_collections((ROLE_ANONYMOUS,), response_collections, collections)
+    check_collections((ROLE_ANONYMOUS,), response_collections, collections.values())
 
 
 async def test_collections_authenticated(client, collections):
     response = await client.get(str(ENDPOINT_COLLECTIONS), auth=MockAuth(ROLE_PROTECTED))
     assert response.status_code == codes.OK
     response_collections = {c['id'] for c in response.json()['collections']}
-    check_collections((ROLE_ANONYMOUS, ROLE_PROTECTED), response_collections, collections)
+    check_collections((ROLE_ANONYMOUS, ROLE_PROTECTED), response_collections, collections.values())
 
 
 async def test_get_collection(client):

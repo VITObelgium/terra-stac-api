@@ -7,7 +7,7 @@ from pathlib import Path
 from fastapi.testclient import TestClient
 
 import terra_stac_api.auth
-from tests.mock_auth import MockAuthBackend
+from .mock_auth import MockAuthBackend
 terra_stac_api.auth.OIDC = MockAuthBackend
 
 import terra_stac_api.app
@@ -42,19 +42,19 @@ async def client(app):
 
 @pytest.fixture(scope="session")
 def collections():
-    collections = []
+    collections = {}
     collection_resources = RESOURCES / "collections"
-    for c_path in collection_resources.iterdir():
+    for c_path in collection_resources.glob("*.json"):
         with open(c_path) as f:
             collection = json.load(f)
-        collections.append(collection)
+        collections[collection['id']] = collection
     return collections
 
 @pytest.fixture(scope="session")
 def items():
     items = dict()
     item_resources = RESOURCES / "items"
-    for p_path in item_resources.iterdir():
+    for p_path in item_resources.glob("*.json"):
         with open(p_path) as f:
             item = json.load(f)
         if item['collection'] not in items:
@@ -62,16 +62,27 @@ def items():
         items[item['collection']].append(item)
     return items
 
+@pytest.fixture(scope="session")
+def extra_collection():
+    with open(RESOURCES / "collections/extra/extra_collection.json") as f:
+        collection = json.load(f)
+    return collection
+
+@pytest.fixture(scope="session")
+def extra_item():
+    with open(RESOURCES / "items") as f:
+        pass
 
 @pytest_asyncio.fixture(autouse=True)
 async def setup_es(api, collections, items):
     # setup
-    for collection in collections:
+    for collection in collections.values():
         await api.client.database.create_collection(collection, refresh=True)
     for collection, c_items in items.items():
         for item in c_items:
             await api.client.database.create_item(item, refresh=True)
     yield
     # teardown
+    await api.client.database._refresh()
     await api.client.database.delete_items()
     await api.client.database.delete_collections()

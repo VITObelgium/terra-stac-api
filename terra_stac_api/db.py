@@ -80,3 +80,6 @@ class DatabaseLogicAuth(DatabaseLogic):
             raise NotFoundError(f"Collection {collection_id} not found")
 
         return collection["_source"]
+
+    async def _refresh(self):
+        await self.client.indices.refresh()

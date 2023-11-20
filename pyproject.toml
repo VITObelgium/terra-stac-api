@@ -16,8 +16,8 @@ dev = [
     "httpx"
 ]
 
-[tool.setuptools]
-packages = ["terra_stac_api"]
+[tool.setuptools.packages.find]
+include = ["terra_stac_api*"]
 
 [tool.pytest_env]
 ES_HOST = {value = "0.0.0.0", skip_if_set = true}

@@ -13,12 +13,13 @@ from stac_fastapi.elasticsearch.extensions import QueryExtension
 from stac_fastapi.elasticsearch.session import Session
 from stac_fastapi.extensions.core import (
     ContextExtension,
-    FieldsExtension,
+    # FieldsExtension,
     FilterExtension,
     SortExtension,
     TokenPaginationExtension,
     TransactionExtension
 )
+from terra_stac_api.extensions.fields import FixedFieldsExtension as FieldsExtension
 from stac_fastapi.extensions.third_party import BulkTransactionExtension
 from starlette.middleware.authentication import AuthenticationMiddleware
 from contextlib import asynccontextmanager

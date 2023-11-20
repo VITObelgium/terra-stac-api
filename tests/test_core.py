@@ -117,6 +117,20 @@ async def test_search_protected_authorized(client):
     assert len(rj['features']) == 6
 
 
+
+async def test_search_protected_fields(client):
+    response = await client.get(
+        str(ENDPOINT_SEARCH), 
+        params={"collections": [COLLECTION_PROTECTED], "fields": {"include": ["properties.eo:cloud_cover"]}},
+        auth=MockAuth(ROLE_PROTECTED)
+    )
+    assert response.status_code == codes.OK
+    rj = response.json()
+    assert len(rj['features']) == 2
+    for item in rj['features']:
+        assert "eo:cloud_cover" not in item["properties"]  # eo:cloudcover field is not specified in Items
+
+
 async def test_search_admin(client, items):
     response = await client.post(str(ENDPOINT_SEARCH), json={"limit": 100}, auth=MockAuth(ROLE_ADMIN))
     assert response.status_code == codes.OK

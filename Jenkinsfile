@@ -1,8 +1,7 @@
 @Library('lib')_
 
 pythonPipeline {
-  package_name          = 'terra-stac-api'
-  test_module_name      = 'terra_stac_api'
+  package_name          = 'terra_stac_api'
   python_version        = '3.10'
   create_tag_job        = true
   build_container_image = true

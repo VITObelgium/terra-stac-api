@@ -37,6 +37,19 @@ If you don't want to store the collection authorizations in your STAC document, 
 POST /collections?_auth_read=anonymoud&_auth_write=stac-admin&_auth_write=stac-editor
 ```
 
+## Development
+To start developing on this project, you should install all needed dependencies for running and testing the code:
+```shell
+$ pip install -e .[dev]
+```
+
+This will also install linting and formatting tools, which are automatically executed when you commit using Git.
+To set up pre-commit as a Git hook, run 
+
+```shell
+$ pre-commit install
+```
+
 ## Testing
 Running the tests requires an active Elasticsearch cluster. By default, it will look for an Elasticsearch cluster on the local host, port 9200.
 

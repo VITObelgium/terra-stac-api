@@ -1,22 +1,24 @@
-from typing import Iterable, Dict, Any, List, Union, Optional
+from typing import Any, Dict, Iterable, List, Union
 
-from stac_fastapi.elasticsearch.database_logic import DatabaseLogic, COLLECTIONS_INDEX, ES_COLLECTIONS_MAPPINGS, index_by_collection_id
 import stac_fastapi.elasticsearch.database_logic
 from stac_fastapi.elasticsearch.config import AsyncElasticsearchSettings
+from stac_fastapi.elasticsearch.database_logic import (
+    COLLECTIONS_INDEX,
+    ES_COLLECTIONS_MAPPINGS,
+    DatabaseLogic,
+    index_by_collection_id,
+)
 from stac_fastapi.types.errors import NotFoundError
 from stac_fastapi.types.stac import Collection
-from elasticsearch import exceptions
-from overrides import overrides
 
+from elasticsearch import exceptions
 from terra_stac_api.auth import ROLE_ADMIN
 
 ES_COLLECTIONS_MAPPINGS["properties"]["_auth"] = {
     "type": "object",
-    "properties": {
-        "read": {"type": "keyword"},
-        "write": {"type": "keyword"}
-    }
+    "properties": {"read": {"type": "keyword"}, "write": {"type": "keyword"}},
 }
+
 
 async def fix_delete_item_index(collection_id: str):
     """Delete the index for items in a collection.
@@ -45,31 +47,21 @@ stac_fastapi.elasticsearch.database_logic.delete_item_index = fix_delete_item_in
 
 
 class DatabaseLogicAuth(DatabaseLogic):
-
     async def get_all_authorized_collections(
-            self,
-            authorizations: List[str],
-            _source: Union[List[str], str, bool, None] = None
+        self,
+        authorizations: List[str],
+        _source: Union[List[str], str, bool, None] = None,
     ) -> Iterable[Dict[str, Any]]:
         # TODO: should be paginated
         # TODO: implement caching?
         # https://github.com/stac-utils/stac-fastapi-elasticsearch/issues/65
-        query = None if ROLE_ADMIN in authorizations else {
-                "bool": {
-                    "must": [
-                        {
-                            "terms": {
-                                "_auth.read": authorizations
-                            }
-                        }
-                    ]
-                }
-            }
+        query = (
+            None
+            if ROLE_ADMIN in authorizations
+            else {"bool": {"must": [{"terms": {"_auth.read": authorizations}}]}}
+        )
         collections = await self.client.search(
-            index=COLLECTIONS_INDEX,
-            query=query,
-            size=1000,
-            _source=_source
+            index=COLLECTIONS_INDEX, query=query, size=1000, _source=_source
         )
         return (c["_source"] for c in collections["hits"]["hits"])
 

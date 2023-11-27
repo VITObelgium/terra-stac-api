@@ -4,19 +4,31 @@ import typing
 import urllib.parse
 import urllib.request
 from enum import Enum
-from typing import Callable, Optional, List
+from typing import Callable, List, Optional
 
-from fastapi import Depends, Request, HTTPException
-from fastapi.openapi.models import OAuthFlows, OAuthFlowPassword, OAuthFlowAuthorizationCode, \
-    OAuthFlowClientCredentials, OAuthFlowImplicit, OAuth2
+from fastapi import Depends, HTTPException, Request
+from fastapi.openapi.models import (
+    OAuth2,
+    OAuthFlowAuthorizationCode,
+    OAuthFlowClientCredentials,
+    OAuthFlowImplicit,
+    OAuthFlowPassword,
+    OAuthFlows,
+)
 from fastapi.security.base import SecurityBase
 from fastapi.security.utils import get_authorization_scheme_param
-from jose import jwt, JWTError
-from starlette.authentication import AuthenticationBackend, BaseUser, SimpleUser, AuthCredentials, AuthenticationError, \
-    UnauthenticatedUser
+from jose import JWTError, jwt
+from starlette.authentication import (
+    AuthCredentials,
+    AuthenticationBackend,
+    AuthenticationError,
+    BaseUser,
+    SimpleUser,
+    UnauthenticatedUser,
+)
 from starlette.requests import HTTPConnection
 from starlette.responses import JSONResponse
-from starlette.status import HTTP_403_FORBIDDEN, HTTP_401_UNAUTHORIZED
+from starlette.status import HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN
 
 
 class GrantType(str, Enum):
@@ -30,7 +42,7 @@ ROLE_ANONYMOUS = "anonymous"
 
 
 def fetch_well_known(issuer: str) -> dict:
-    issuer = issuer if issuer.endswith("/") else issuer + '/'
+    issuer = issuer if issuer.endswith("/") else issuer + "/"
     url = urllib.parse.urljoin(issuer, ".well-known/openid-configuration")
     with urllib.request.urlopen(url) as response:
         if response.status != 200:
@@ -39,7 +51,7 @@ def fetch_well_known(issuer: str) -> dict:
 
 
 def fetch_jwks(well_known: dict) -> dict:
-    url = well_known['jwks_uri']
+    url = well_known["jwks_uri"]
     with urllib.request.urlopen(url) as response:
         if response.status != 200:
             raise RuntimeError("Failed to fetch OIDC JWKS")
@@ -48,22 +60,20 @@ def fetch_jwks(well_known: dict) -> dict:
 
 def on_auth_error(request: Request, exc: AuthenticationError):
     return JSONResponse(
-        content={
-            "detail": str(exc)
-        },
+        content={"detail": str(exc)},
         status_code=HTTP_401_UNAUTHORIZED,
-        headers={"WWW-Authenticate": "Bearer"}
+        headers={"WWW-Authenticate": "Bearer"},
     )
 
 
 class OIDC(SecurityBase, AuthenticationBackend):
     def __init__(
-            self,
-            issuer: str,
-            *,
-            scheme_name: Optional[str] = "OpenID Connect",
-            allowed_grant_types: List[GrantType] = list(GrantType),
-            jwt_decode_options: Optional[dict] = None
+        self,
+        issuer: str,
+        *,
+        scheme_name: Optional[str] = "OpenID Connect",
+        allowed_grant_types: List[GrantType] = list(GrantType),
+        jwt_decode_options: Optional[dict] = None,
     ):
         self.scheme_name = scheme_name
         self.jwt_decode_options = jwt_decode_options
@@ -82,19 +92,22 @@ class OIDC(SecurityBase, AuthenticationBackend):
 
         if GrantType.AUTHORIZATION_CODE in grant_types:
             flows.authorizationCode = OAuthFlowAuthorizationCode(
-                authorizationUrl=authz_endpoint,
-                tokenUrl=token_endpoint
+                authorizationUrl=authz_endpoint, tokenUrl=token_endpoint
             )
 
         if GrantType.CLIENT_CREDENTIALS in grant_types:
-            flows.clientCredentials = OAuthFlowClientCredentials(tokenUrl=token_endpoint)
+            flows.clientCredentials = OAuthFlowClientCredentials(
+                tokenUrl=token_endpoint
+            )
 
         if GrantType.IMPLICIT in grant_types:
             flows.implicit = OAuthFlowImplicit(authorizationUrl=authz_endpoint)
 
         self.model = OAuth2(flows=flows)
 
-    async def authenticate(self, conn: HTTPConnection) -> typing.Optional[typing.Tuple["AuthCredentials", "BaseUser"]]:
+    async def authenticate(
+        self, conn: HTTPConnection
+    ) -> typing.Optional[typing.Tuple["AuthCredentials", "BaseUser"]]:
         """
         Get the user information and credentials for the request.
         :param conn:
@@ -108,18 +121,17 @@ class OIDC(SecurityBase, AuthenticationBackend):
 
         try:
             claims = jwt.decode(param, self.jwks, options=self.jwt_decode_options)
-            scopes = claims['realm_access']['roles']
+            scopes = claims["realm_access"]["roles"]
             scopes.append(ROLE_ANONYMOUS)
         except JWTError:
             raise AuthenticationError("Invalid token")
-        return AuthCredentials(scopes), SimpleUser(claims['preferred_username'])
+        return AuthCredentials(scopes), SimpleUser(claims["preferred_username"])
 
     def require_any_role(self, *roles: str) -> Callable:
         async def _role_require(request: Request, authenticated=Depends(self)):
             if not any(role in request.auth.scopes for role in roles):
-                raise HTTPException(
-                    status_code=HTTP_403_FORBIDDEN
-                )
+                raise HTTPException(status_code=HTTP_403_FORBIDDEN)
+
         return _role_require
 
     async def __call__(self, request: Request):
@@ -127,7 +139,7 @@ class OIDC(SecurityBase, AuthenticationBackend):
             raise HTTPException(
                 status_code=HTTP_401_UNAUTHORIZED,
                 detail="Not authenticated",
-                headers={"WWW-Authenticate": "Bearer"}
+                headers={"WWW-Authenticate": "Bearer"},
             )
 
 

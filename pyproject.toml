@@ -5,7 +5,7 @@ description = "Terrascope STAC API"
 authors = [{name = "Stijn Caerts", email = "stijn.caerts@vito.be"}]
 dependencies = [
     "stac-fastapi.elasticsearch==1.0.0",
-    "python-jose==3.3.0"
+    "python-jose==3.3.0",
 ]
 
 [project.optional-dependencies]
@@ -13,7 +13,9 @@ dev = [
     "pytest",
     "pytest-env",
     "pytest-asyncio",
-    "httpx"
+    "httpx",
+    "pre-commit",
+    "ruff",
 ]
 
 [tool.setuptools.packages.find]
@@ -30,3 +32,9 @@ ROLE_EDITOR = {value = "stac-editor", skip_if_set = true}
 [build-system]
 requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[tool.ruff]
+target-version = "py310"
+
+[tool.ruff.lint]
+extend-select = ["I"]

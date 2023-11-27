@@ -1,18 +1,21 @@
 import asyncio
-from httpx import AsyncClient
-import pytest
-import pytest_asyncio
 import json
 from pathlib import Path
-from fastapi.testclient import TestClient
+
+import pytest
+import pytest_asyncio
+from httpx import AsyncClient
 
 import terra_stac_api.auth
+
 from .mock_auth import MockAuthBackend
+
 terra_stac_api.auth.OIDC = MockAuthBackend
 
-import terra_stac_api.app
+import terra_stac_api.app  # noqa
 
 RESOURCES = Path(__file__).parent / "resources"
+
 
 @pytest.fixture(scope="session")
 def event_loop():
@@ -20,9 +23,11 @@ def event_loop():
     yield loop
     loop.close()
 
+
 @pytest.fixture(scope="session")
 def api():
     return terra_stac_api.app.api
+
 
 @pytest_asyncio.fixture(scope="session")
 async def app(api):
@@ -40,6 +45,7 @@ async def client(app):
     async with AsyncClient(app=app, base_url="http://test") as tc:
         yield tc
 
+
 @pytest.fixture(scope="session")
 def collections():
     collections = {}
@@ -47,8 +53,9 @@ def collections():
     for c_path in collection_resources.glob("*.json"):
         with open(c_path) as f:
             collection = json.load(f)
-        collections[collection['id']] = collection
+        collections[collection["id"]] = collection
     return collections
+
 
 @pytest.fixture(scope="session")
 def items():
@@ -57,10 +64,11 @@ def items():
     for p_path in item_resources.glob("*.json"):
         with open(p_path) as f:
             item = json.load(f)
-        if item['collection'] not in items:
-            items[item['collection']] = []
-        items[item['collection']].append(item)
+        if item["collection"] not in items:
+            items[item["collection"]] = []
+        items[item["collection"]].append(item)
     return items
+
 
 @pytest.fixture(scope="session")
 def extra_collection():
@@ -68,10 +76,12 @@ def extra_collection():
         collection = json.load(f)
     return collection
 
+
 @pytest.fixture(scope="session")
 def extra_item():
-    with open(RESOURCES / "items") as f:
+    with open(RESOURCES / "items") as f:  # noqa
         pass
+
 
 @pytest_asyncio.fixture(autouse=True)
 async def setup_es(api, collections, items):

@@ -1,6 +1,5 @@
 from yarl import URL
 
-
 ROLE_PROTECTED = "protected"
 ROLE_ADMIN = "stac-admin"
 ROLE_EDITOR = "stac-editor"

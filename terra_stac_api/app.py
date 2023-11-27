@@ -1,13 +1,12 @@
 import os
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Security
 from stac_fastapi.api.app import StacApi
 from stac_fastapi.api.models import create_get_request_model, create_post_request_model
 from stac_fastapi.api.routes import Scope
 from stac_fastapi.elasticsearch.config import ElasticsearchSettings
-from stac_fastapi.elasticsearch.core import (
-    EsAsyncBaseFiltersClient
-)
+from stac_fastapi.elasticsearch.core import EsAsyncBaseFiltersClient
 from stac_fastapi.elasticsearch.database_logic import create_collection_index
 from stac_fastapi.elasticsearch.extensions import QueryExtension
 from stac_fastapi.elasticsearch.session import Session
@@ -17,15 +16,18 @@ from stac_fastapi.extensions.core import (
     FilterExtension,
     SortExtension,
     TokenPaginationExtension,
-    TransactionExtension
+    TransactionExtension,
 )
-from terra_stac_api.extensions.fields import FixedFieldsExtension as FieldsExtension
 from stac_fastapi.extensions.third_party import BulkTransactionExtension
 from starlette.middleware.authentication import AuthenticationMiddleware
-from contextlib import asynccontextmanager
 
-from terra_stac_api.auth import OIDC, on_auth_error, GrantType, ROLE_ADMIN, ROLE_EDITOR
-from terra_stac_api.core import CoreClientAuth, TransactionsClientAuth, BulkTransactionsClientAuth
+from terra_stac_api.auth import OIDC, ROLE_ADMIN, ROLE_EDITOR, GrantType, on_auth_error
+from terra_stac_api.core import (
+    BulkTransactionsClientAuth,
+    CoreClientAuth,
+    TransactionsClientAuth,
+)
+from terra_stac_api.extensions.fields import FixedFieldsExtension as FieldsExtension
 
 settings = ElasticsearchSettings()
 session = Session.create_from_settings(settings)
@@ -33,11 +35,13 @@ session = Session.create_from_settings(settings)
 auth = OIDC(
     issuer=os.getenv("OIDC_ISSUER"),
     jwt_decode_options={"verify_aud": False},
-    allowed_grant_types=[GrantType.AUTHORIZATION_CODE, GrantType.PASSWORD]
+    allowed_grant_types=[GrantType.AUTHORIZATION_CODE, GrantType.PASSWORD],
 )
 
 extensions = [
-    TransactionExtension(client=TransactionsClientAuth(session=session), settings=settings),
+    TransactionExtension(
+        client=TransactionsClientAuth(session=session), settings=settings
+    ),
     BulkTransactionExtension(client=BulkTransactionsClientAuth(session=session)),
     FieldsExtension(),
     FilterExtension(client=EsAsyncBaseFiltersClient()),
@@ -50,10 +54,12 @@ extensions = [
 get_request_model = create_get_request_model(extensions)
 post_request_model = create_post_request_model(extensions)
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await create_collection_index()
     yield
+
 
 api = StacApi(
     settings=settings,
@@ -62,19 +68,28 @@ api = StacApi(
     search_get_request_model=get_request_model,
     search_post_request_model=post_request_model,
     route_dependencies=[
-        ([Scope(path="/collections", method="POST")], [Security(auth.require_any_role(ROLE_ADMIN, ROLE_EDITOR))]),  # only allow editors or admins to create new collections
-        ([
-            Scope(path="/collections", method="PUT"),
-            Scope(path="/collections/{collection_id}/items/{item_id}", method="PUT"),
-            Scope(path="/collections/{collection_id}/items", method="POST"),
-            Scope(path="/collections/{collection_id}/items/{item_id}", method="DELETE"),
-            Scope(path="/collections/{collection_id}", method="DELETE"),
-            Scope(path="/collections/{collections_id}/bulk_items", method="POST")
-         ],
-         [Security(auth)])
+        (
+            [Scope(path="/collections", method="POST")],
+            [Security(auth.require_any_role(ROLE_ADMIN, ROLE_EDITOR))],
+        ),  # only allow editors or admins to create new collections
+        (
+            [
+                Scope(path="/collections", method="PUT"),
+                Scope(
+                    path="/collections/{collection_id}/items/{item_id}", method="PUT"
+                ),
+                Scope(path="/collections/{collection_id}/items", method="POST"),
+                Scope(
+                    path="/collections/{collection_id}/items/{item_id}", method="DELETE"
+                ),
+                Scope(path="/collections/{collection_id}", method="DELETE"),
+                Scope(path="/collections/{collections_id}/bulk_items", method="POST"),
+            ],
+            [Security(auth)],
+        ),
     ],
     title="terra-stac-api",
-    description="Terrascope STAC API"
+    description="Terrascope STAC API",
 )
 app = api.app
 app.add_middleware(AuthenticationMiddleware, backend=auth, on_error=on_auth_error)
@@ -85,12 +100,13 @@ def run():
     """Run app from command line using uvicorn if available"""
     try:
         import uvicorn
+
         uvicorn.run(
             "terra_stac_api.app:app",
             host=settings.app_host,
             port=settings.app_port,
             log_level="info",
-            reload=settings.reload
+            reload=settings.reload,
         )
     except ImportError:
         raise RuntimeError("Uvicorn must be installed in order to use command")

@@ -1,3 +1,5 @@
+from datetime import datetime as datetime_type
+from datetime import timezone
 from enum import Enum
 from typing import List, Optional
 from urllib.parse import urljoin
@@ -10,7 +12,7 @@ from stac_fastapi.elasticsearch.core import (
     CoreClient,
     TransactionsClient,
 )
-from stac_fastapi.elasticsearch.serializers import CollectionSerializer
+from stac_fastapi.elasticsearch.serializers import CollectionSerializer, ItemSerializer
 from stac_fastapi.extensions.third_party.bulk_transactions import Items
 from stac_fastapi.types import stac as stac_types
 from stac_fastapi.types.search import BaseSearchPostRequest
@@ -235,7 +237,15 @@ class TransactionsClientAuth(TransactionsClient):
             collection_id,
             AccessType.WRITE,
         )
-        return await super().update_item(collection_id, item_id, item, **kwargs)
+        # re-implement because super method doesn't pass request to delete operation
+        base_url = str(request.base_url)
+        now = datetime_type.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        item["properties"]["updated"] = now
+        await self.database.check_collection_exists(collection_id)
+        await self.delete_item(item_id=item_id, collection_id=collection_id, **kwargs)
+        await self.create_item(collection_id=collection_id, item=item, **kwargs)
+
+        return ItemSerializer.db_to_stac(item, base_url)
 
     @overrides
     async def delete_item(

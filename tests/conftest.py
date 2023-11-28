@@ -79,8 +79,9 @@ def extra_collection():
 
 @pytest.fixture(scope="session")
 def extra_item():
-    with open(RESOURCES / "items") as f:  # noqa
-        pass
+    with open(RESOURCES / "items/extra/S2A_20230220T093031_36VVR_TOC_V210.json") as f:
+        item = json.load(f)
+    return item
 
 
 @pytest_asyncio.fixture(autouse=True)

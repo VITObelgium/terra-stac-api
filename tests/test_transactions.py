@@ -92,3 +92,91 @@ async def test_delete_collection_authorized(client, api):
     assert COLLECTION_S2_TOC_V2 not in list(
         c["id"] for c in response.json()["collections"]
     )
+
+
+async def test_create_item(client, extra_item):
+    response = await client.post(
+        str(ENDPOINT_COLLECTIONS / extra_item["collection"] / "items"),
+        json=extra_item,
+    )
+    assert response.status_code == codes.UNAUTHORIZED
+
+
+async def test_create_item_unauthorized(client, extra_item):
+    response = await client.post(
+        str(ENDPOINT_COLLECTIONS / extra_item["collection"] / "items"),
+        json=extra_item,
+        auth=MockAuth(ROLE_PROTECTED),
+    )
+    assert response.status_code == codes.FORBIDDEN
+
+
+async def test_create_item_authorized(client, extra_item):
+    response = await client.post(
+        str(ENDPOINT_COLLECTIONS / extra_item["collection"] / "items"),
+        json=extra_item,
+        auth=MockAuth(ROLE_SENTINEL2),
+    )
+    assert response.status_code == codes.OK
+
+
+async def test_update_item(client, items):
+    item = next(iter(items[COLLECTION_S2_TOC_V2]))
+    response = await client.put(
+        str(ENDPOINT_COLLECTIONS / item["collection"] / "items" / item["id"]), json=item
+    )
+    assert response.status_code == codes.UNAUTHORIZED
+
+
+async def test_update_item_unauthorized(client, items):
+    item = next(iter(items[COLLECTION_S2_TOC_V2]))
+    response = await client.put(
+        str(ENDPOINT_COLLECTIONS / item["collection"] / "items" / item["id"]),
+        json=item,
+        auth=MockAuth(ROLE_PROTECTED),
+    )
+    assert response.status_code == codes.FORBIDDEN
+
+
+async def test_update_item_authorized(client, items):
+    item = next(iter(items[COLLECTION_S2_TOC_V2]))
+    response = await client.put(
+        str(ENDPOINT_COLLECTIONS / item["collection"] / "items" / item["id"]),
+        json=item,
+        auth=MockAuth(ROLE_SENTINEL2),
+    )
+    assert response.status_code == codes.OK
+
+
+async def test_delete_item(client, items):
+    item = next(iter(items[COLLECTION_S2_TOC_V2]))
+    response = await client.delete(
+        str(ENDPOINT_COLLECTIONS / item["collection"] / "items" / item["id"]),
+    )
+    assert response.status_code == codes.UNAUTHORIZED
+
+
+async def test_delete_item_unauthorized(client, items):
+    item = next(iter(items[COLLECTION_S2_TOC_V2]))
+    response = await client.delete(
+        str(ENDPOINT_COLLECTIONS / item["collection"] / "items" / item["id"]),
+        auth=MockAuth(ROLE_PROTECTED),
+    )
+    assert response.status_code == codes.FORBIDDEN
+
+
+async def test_delete_item_authorized(client, items, api):
+    item = next(iter(items[COLLECTION_S2_TOC_V2]))
+    response = await client.delete(
+        str(ENDPOINT_COLLECTIONS / item["collection"] / "items" / item["id"]),
+        auth=MockAuth(ROLE_SENTINEL2),
+    )
+    assert response.status_code == codes.NO_CONTENT
+
+    await api.client.database._refresh()
+
+    response = await client.get(
+        str(ENDPOINT_COLLECTIONS / COLLECTION_S2_TOC_V2 / "items")
+    )
+    assert response.status_code == codes.OK
+    assert item["id"] not in list(i["id"] for i in response.json()["features"])

@@ -45,7 +45,7 @@ async def test_update_collection(client, collections):
 
 
 async def test_update_collection_no_write_permission(client, collections):
-    protected = collections[COLLECTION_PROTECTED]
+    protected = collections[COLLECTION_S2_TOC_V2]
     response = await client.put(
         str(ENDPOINT_COLLECTIONS), json=protected, auth=MockAuth(ROLE_PROTECTED)
     )

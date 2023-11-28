@@ -1,6 +1,8 @@
+import logging
 import os
 from contextlib import asynccontextmanager
 
+from asgi_logger import AccessLoggerMiddleware
 from fastapi import FastAPI, Security
 from stac_fastapi.api.app import StacApi
 from stac_fastapi.api.models import create_get_request_model, create_post_request_model
@@ -93,6 +95,11 @@ api = StacApi(
 )
 app = api.app
 app.add_middleware(AuthenticationMiddleware, backend=auth, on_error=on_auth_error)
+app.add_middleware(
+    AccessLoggerMiddleware,
+    format='%(t)s %(client_addr)s "%(request_line)s" %(s)s %(B)s %(M)s',
+    logger=logging.getLogger("terra_stac_api.access"),
+)
 app.router.lifespan_context = lifespan
 
 

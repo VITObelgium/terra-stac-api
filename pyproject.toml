@@ -6,6 +6,7 @@ authors = [{name = "Stijn Caerts", email = "stijn.caerts@vito.be"}]
 dependencies = [
     "stac-fastapi.elasticsearch==1.0.0",
     "python-jose==3.3.0",
+    "asgi-logger==0.1.0",
 ]
 
 [project.optional-dependencies]

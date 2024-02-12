@@ -1,5 +1,4 @@
 import logging
-import os
 from contextlib import asynccontextmanager
 
 from asgi_logger import AccessLoggerMiddleware
@@ -23,7 +22,9 @@ from stac_fastapi.opensearch.config import OpensearchSettings
 from stac_fastapi.opensearch.database_logic import create_collection_index
 from starlette.middleware.authentication import AuthenticationMiddleware
 
-from terra_stac_api.auth import OIDC, ROLE_ADMIN, ROLE_EDITOR, GrantType, on_auth_error
+from terra_stac_api import config
+from terra_stac_api.auth import OIDC, GrantType, on_auth_error
+from terra_stac_api.config import ROLE_ADMIN, ROLE_EDITOR
 from terra_stac_api.core import (
     BulkTransactionsClientAuth,
     CoreClientAuth,
@@ -37,7 +38,7 @@ session = Session.create_from_settings(settings)
 database_logic = DatabaseLogicAuth()
 
 auth = OIDC(
-    issuer=os.getenv("OIDC_ISSUER"),
+    issuer=config.OIDC_ISSUER,
     jwt_decode_options={"verify_aud": False},
     allowed_grant_types=[GrantType.AUTHORIZATION_CODE, GrantType.PASSWORD],
 )

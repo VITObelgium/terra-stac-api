@@ -10,7 +10,8 @@ from starlette.authentication import (
 )
 from starlette.requests import HTTPConnection
 
-from terra_stac_api.auth import OIDC, ROLE_ANONYMOUS, GrantType
+from terra_stac_api.auth import OIDC, GrantType
+from terra_stac_api.config import ROLE_ANONYMOUS
 
 
 class MockAuthBackend(OIDC):

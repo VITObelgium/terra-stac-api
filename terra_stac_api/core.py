@@ -22,7 +22,8 @@ from stac_pydantic.shared import MimeTypes
 from starlette import status
 from starlette.authentication import BaseUser
 
-from terra_stac_api.auth import ROLE_ADMIN, ROLE_ANONYMOUS
+from terra_stac_api import config
+from terra_stac_api.config import ROLE_ADMIN, ROLE_ANONYMOUS
 from terra_stac_api.db import DatabaseLogicAuth
 from terra_stac_api.errors import ForbiddenError, UnauthorizedError
 
@@ -89,6 +90,7 @@ def is_admin(scopes: List[str]) -> bool:
 @attr.s
 class CoreClientAuth(CoreClient):
     database: DatabaseLogicAuth
+    landing_page_id = attr.ib(default=config.STAC_ID)
 
     @overrides
     async def all_collections(self, **kwargs) -> Collections:

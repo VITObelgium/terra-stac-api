@@ -1,6 +1,6 @@
 from httpx import codes
 
-from terra_stac_api.auth import ROLE_ANONYMOUS
+from terra_stac_api.config import ROLE_ANONYMOUS
 from terra_stac_api.core import AccessType, _auth
 
 from .constants import (

@@ -12,7 +12,7 @@ from stac_fastapi.opensearch.database_logic import (
 from stac_fastapi.types.errors import NotFoundError
 from stac_fastapi.types.stac import Collection
 
-from terra_stac_api.auth import ROLE_ADMIN
+from terra_stac_api.config import ROLE_ADMIN
 
 ES_COLLECTIONS_MAPPINGS["properties"]["_auth"] = {
     "type": "object",

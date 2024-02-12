@@ -1,5 +1,4 @@
 import json
-import os
 import typing
 import urllib.parse
 import urllib.request
@@ -30,15 +29,14 @@ from starlette.requests import HTTPConnection
 from starlette.responses import JSONResponse
 from starlette.status import HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN
 
+from terra_stac_api.config import ROLE_ANONYMOUS
+
 
 class GrantType(str, Enum):
     AUTHORIZATION_CODE = "authorization_code"
     CLIENT_CREDENTIALS = "client_credentials"
     IMPLICIT = "implicit"
     PASSWORD = "password"
-
-
-ROLE_ANONYMOUS = "anonymous"
 
 
 def fetch_well_known(issuer: str) -> dict:
@@ -141,7 +139,3 @@ class OIDC(SecurityBase, AuthenticationBackend):
                 detail="Not authenticated",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-
-
-ROLE_ADMIN = os.getenv("ROLE_ADMIN")
-ROLE_EDITOR = os.getenv("ROLE_EDITOR")

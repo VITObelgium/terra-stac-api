@@ -7,12 +7,12 @@ from urllib.parse import urljoin
 import attr
 from fastapi import HTTPException, Request
 from overrides import overrides
-from stac_fastapi.elasticsearch.core import (
+from stac_fastapi.core.core import (
     BulkTransactionsClient,
     CoreClient,
     TransactionsClient,
 )
-from stac_fastapi.elasticsearch.serializers import CollectionSerializer, ItemSerializer
+from stac_fastapi.core.serializers import CollectionSerializer, ItemSerializer
 from stac_fastapi.extensions.third_party.bulk_transactions import Items
 from stac_fastapi.types import stac as stac_types
 from stac_fastapi.types.search import BaseSearchPostRequest
@@ -88,7 +88,7 @@ def is_admin(scopes: List[str]) -> bool:
 
 @attr.s
 class CoreClientAuth(CoreClient):
-    database = DatabaseLogicAuth()
+    database: DatabaseLogicAuth
 
     @overrides
     async def all_collections(self, **kwargs) -> Collections:
@@ -173,7 +173,7 @@ class TransactionsClientAuth(TransactionsClient):
     Note that no existing authorizations are checked for the :func:`create_collection` method.
     """
 
-    database = DatabaseLogicAuth()
+    database: DatabaseLogicAuth
 
     async def ensure_collection_auth_present(
         self, collection: stac_types.Collection, request: Request
@@ -314,7 +314,7 @@ class TransactionsClientAuth(TransactionsClient):
 
 @attr.s
 class BulkTransactionsClientAuth(BulkTransactionsClient):
-    database = DatabaseLogicAuth()
+    database: DatabaseLogicAuth
 
     async def bulk_item_insert(
         self, items: Items, chunk_size: Optional[int] = None, **kwargs

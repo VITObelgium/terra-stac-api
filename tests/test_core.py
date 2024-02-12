@@ -62,6 +62,8 @@ async def test_collections_authenticated(client, collections):
     check_collections(
         (ROLE_ANONYMOUS, ROLE_PROTECTED), response_collections, collections.values()
     )
+    for c in response.json()["collections"]:
+        assert "_auth" not in c  # check if auth permissions are not leaked in response
 
 
 async def test_get_collection(client):

@@ -7,11 +7,9 @@ from fastapi import FastAPI, Security
 from stac_fastapi.api.app import StacApi
 from stac_fastapi.api.models import create_get_request_model, create_post_request_model
 from stac_fastapi.api.routes import Scope
-from stac_fastapi.elasticsearch.config import ElasticsearchSettings
-from stac_fastapi.elasticsearch.core import EsAsyncBaseFiltersClient
-from stac_fastapi.elasticsearch.database_logic import create_collection_index
-from stac_fastapi.elasticsearch.extensions import QueryExtension
-from stac_fastapi.elasticsearch.session import Session
+from stac_fastapi.core.core import EsAsyncBaseFiltersClient
+from stac_fastapi.core.extensions import QueryExtension
+from stac_fastapi.core.session import Session
 from stac_fastapi.extensions.core import (
     ContextExtension,
     # FieldsExtension,
@@ -21,6 +19,8 @@ from stac_fastapi.extensions.core import (
     TransactionExtension,
 )
 from stac_fastapi.extensions.third_party import BulkTransactionExtension
+from stac_fastapi.opensearch.config import OpensearchSettings
+from stac_fastapi.opensearch.database_logic import create_collection_index
 from starlette.middleware.authentication import AuthenticationMiddleware
 
 from terra_stac_api.auth import OIDC, ROLE_ADMIN, ROLE_EDITOR, GrantType, on_auth_error
@@ -29,10 +29,13 @@ from terra_stac_api.core import (
     CoreClientAuth,
     TransactionsClientAuth,
 )
+from terra_stac_api.db import DatabaseLogicAuth
 from terra_stac_api.extensions.fields import FixedFieldsExtension as FieldsExtension
+from terra_stac_api.serializer import CustomCollectionSerializer
 
-settings = ElasticsearchSettings()
+settings = OpensearchSettings()
 session = Session.create_from_settings(settings)
+database_logic = DatabaseLogicAuth()
 
 auth = OIDC(
     issuer=os.getenv("OIDC_ISSUER"),
@@ -42,9 +45,16 @@ auth = OIDC(
 
 extensions = [
     TransactionExtension(
-        client=TransactionsClientAuth(session=session), settings=settings
+        client=TransactionsClientAuth(
+            database=database_logic, session=session, settings=settings
+        ),
+        settings=settings,
     ),
-    BulkTransactionExtension(client=BulkTransactionsClientAuth(session=session)),
+    BulkTransactionExtension(
+        client=BulkTransactionsClientAuth(
+            database=database_logic, session=session, settings=settings
+        )
+    ),
     FieldsExtension(),
     FilterExtension(client=EsAsyncBaseFiltersClient()),
     QueryExtension(),
@@ -66,7 +76,12 @@ async def lifespan(app: FastAPI):
 api = StacApi(
     settings=settings,
     extensions=extensions,
-    client=CoreClientAuth(session=session, post_request_model=post_request_model),
+    client=CoreClientAuth(
+        database=database_logic,
+        session=session,
+        post_request_model=post_request_model,
+        collection_serializer=CustomCollectionSerializer,
+    ),
     search_get_request_model=get_request_model,
     search_post_request_model=post_request_model,
     route_dependencies=[

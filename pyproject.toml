@@ -1,6 +1,6 @@
 [project]
 name = "terra-stac-api"
-version = "0.0.1"
+version = "0.1.0"
 description = "Terrascope STAC API"
 authors = [{name = "Stijn Caerts", email = "stijn.caerts@vito.be"}]
 dependencies = [

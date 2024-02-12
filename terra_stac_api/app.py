@@ -12,7 +12,7 @@ from stac_fastapi.core.extensions import QueryExtension
 from stac_fastapi.core.session import Session
 from stac_fastapi.extensions.core import (
     ContextExtension,
-    # FieldsExtension,
+    FieldsExtension,
     FilterExtension,
     SortExtension,
     TokenPaginationExtension,
@@ -30,7 +30,6 @@ from terra_stac_api.core import (
     TransactionsClientAuth,
 )
 from terra_stac_api.db import DatabaseLogicAuth
-from terra_stac_api.extensions.fields import FixedFieldsExtension as FieldsExtension
 from terra_stac_api.serializer import CustomCollectionSerializer
 
 settings = OpensearchSettings()

@@ -14,7 +14,7 @@ dependencies = [
 dev = [
     "pytest",
     "pytest-env",
-    "pytest-asyncio",
+    "pytest-asyncio~=0.21.0",
     "httpx",
     "pre-commit",
     "ruff",

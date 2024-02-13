@@ -7,7 +7,7 @@ pythonPipeline {
   create_tag_job        = true
   build_container_image = true
   dev_hosts             = 'docker-services-dev-01.vgt.vito.be'
-  prod_hosts            = 'docker-services-prod-01.vgt.vito.be'
+  prod_hosts            = 'docker-services-prod-02.vgt.vito.be'
   docker_deploy         = true
   extras_require        = 'dev'
   pre_test_script       = 'pre_test.sh'

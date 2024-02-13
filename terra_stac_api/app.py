@@ -23,7 +23,13 @@ from stac_fastapi.opensearch.database_logic import create_collection_index
 from starlette.middleware.authentication import AuthenticationMiddleware
 
 from terra_stac_api.auth import OIDC, GrantType, on_auth_error
-from terra_stac_api.config import OIDC_ISSUER, ROLE_ADMIN, ROLE_EDITOR
+from terra_stac_api.config import (
+    OIDC_ISSUER,
+    ROLE_ADMIN,
+    ROLE_EDITOR,
+    STAC_DESCRIPTION,
+    STAC_TITLE,
+)
 from terra_stac_api.core import (
     BulkTransactionsClientAuth,
     CoreClientAuth,
@@ -104,8 +110,8 @@ api = StacApi(
             [Security(auth)],
         ),
     ],
-    title="terra-stac-api",
-    description="Terrascope STAC API",
+    title=STAC_TITLE,
+    description=STAC_DESCRIPTION,
 )
 app = api.app
 app.add_middleware(AuthenticationMiddleware, backend=auth, on_error=on_auth_error)

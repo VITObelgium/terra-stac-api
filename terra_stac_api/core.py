@@ -12,7 +12,7 @@ from stac_fastapi.core.core import (
     CoreClient,
     TransactionsClient,
 )
-from stac_fastapi.core.serializers import CollectionSerializer, ItemSerializer
+from stac_fastapi.core.serializers import ItemSerializer
 from stac_fastapi.extensions.third_party.bulk_transactions import Items
 from stac_fastapi.types import stac as stac_types
 from stac_fastapi.types.search import BaseSearchPostRequest
@@ -287,17 +287,7 @@ class TransactionsClientAuth(TransactionsClient):
         collection = await self.ensure_collection_auth_present(
             collection, kwargs["request"]
         )
-
-        base_url = str(kwargs["request"].base_url)
-
-        # not needed because ensure_authorized already checks whether the collection exists
-        # await self.database.find_collection(collection_id=collection["id"])
-        await self.database.delete_collection(
-            collection_id=collection["id"]
-        )  # fix call and bypass second authorization check
-        await self.create_collection(collection, **kwargs)
-
-        return CollectionSerializer.db_to_stac(collection, base_url)
+        return await super().update_collection(collection, **kwargs)
 
     @overrides
     async def delete_collection(

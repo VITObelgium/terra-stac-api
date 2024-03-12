@@ -23,7 +23,12 @@ from starlette import status
 from starlette.authentication import BaseUser
 
 from terra_stac_api import config
-from terra_stac_api.config import ROLE_ADMIN, ROLE_ANONYMOUS
+from terra_stac_api.config import (
+    EDITOR_PUBLIC_COLLECTIONS,
+    ROLE_ADMIN,
+    ROLE_ANONYMOUS,
+    ROLE_EDITOR,
+)
 from terra_stac_api.db import DatabaseLogicAuth
 from terra_stac_api.errors import ForbiddenError, UnauthorizedError
 
@@ -183,7 +188,7 @@ class TransactionsClientAuth(TransactionsClient):
         """
         Make sure the collection authorizations are set. They can be provided either in the collection body (_auth)
         or the HTTP request parameters (_auth_read, _auth_write).
-        Also make sure only admin users can publish public collections.
+        Also make sure only admin users can publish public collections, or editors if they're explicitly allowed.
 
         :param collection: collection
         :param request: request object
@@ -204,7 +209,12 @@ class TransactionsClientAuth(TransactionsClient):
             or ROLE_ANONYMOUS in collection[_auth][AccessType.WRITE.value]
             or (
                 ROLE_ANONYMOUS in collection[_auth][AccessType.READ.value]
-                and ROLE_ADMIN not in request.auth.scopes
+                and not (
+                    ROLE_ADMIN in request.auth.scopes
+                    or (
+                        ROLE_EDITOR in request.auth.scopes and EDITOR_PUBLIC_COLLECTIONS
+                    )
+                )
             )
         ):
             raise HTTPException(

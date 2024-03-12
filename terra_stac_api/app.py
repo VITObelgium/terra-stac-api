@@ -35,7 +35,7 @@ from terra_stac_api.core import (
     CoreClientAuth,
     TransactionsClientAuth,
 )
-from terra_stac_api.db import DatabaseLogicAuth
+from terra_stac_api.db import DatabaseLogicAuth, create_index_templates
 from terra_stac_api.serializer import CustomCollectionSerializer
 
 settings = OpensearchSettings()
@@ -74,6 +74,7 @@ post_request_model = create_post_request_model(extensions)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    await create_index_templates()
     await create_collection_index()
     yield
 

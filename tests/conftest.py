@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient
+from stac_fastapi.opensearch.database_logic import COLLECTIONS_INDEX, ITEM_INDICES
 
 import terra_stac_api.auth
 
@@ -95,5 +96,5 @@ async def setup_es(api, collections, items):
     yield
     # teardown
     await api.client.database._refresh()
-    await api.client.database.delete_items()
-    await api.client.database.delete_collections()
+    await api.client.database.client.indices.delete(index=ITEM_INDICES)
+    await api.client.database.client.indices.delete(index=COLLECTIONS_INDEX)

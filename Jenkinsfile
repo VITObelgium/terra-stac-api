@@ -9,6 +9,7 @@ pythonPipeline {
   dev_hosts             = 'docker-services-dev-01.vgt.vito.be'
   prod_hosts            = 'docker-services-prod-02.vgt.vito.be'
   docker_deploy         = true
+  docker_registry_prod  = 'vito-docker.artifactory.vgt.vito.be'
   extras_require        = 'dev'
   pre_test_script       = 'pre_test.sh'
 }

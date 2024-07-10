@@ -3,7 +3,7 @@
 pythonPipeline {
   package_name          = 'terra-stac-api'
   test_module_name      = 'terra_stac_api'
-  python_version        = '3.10'
+  python_version        = '3.12'
   create_tag_job        = true
   build_container_image = true
   dev_hosts             = 'docker-services-dev-01.vgt.vito.be'

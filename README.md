@@ -1,5 +1,7 @@
 # `terra-stac-api`
 
+![Architecture of terra-stac-api](assets/architecture.svg)
+
 ## Configuration
 
 The application can be configured via environment variables. Here is an overview of the most important settings:
@@ -17,6 +19,15 @@ The application can be configured via environment variables. Here is an overview
 | `ROLE_ADMIN`                | Role for admin users                                    | stac-admin    |
 | `ROLE_EDITOR`               | Role for editors                                        | stac-editor   |
 | `EDITOR_PUBLIC_COLLECTIONS` | Indicates whether editors can create public collections | false         |
+
+
+## Dependencies
+The `terra-stac-api` application relies on a **OpenSearch** / **Elasticsearch** database to store the STAC Collections and Items.
+The necessary indices will be created automatically by the application on application start-up (collections index) or when creating new collections (item index). 
+
+> [!IMPORTANT]
+> If you want to run multiple instances of the `terra-stac-api` with same OpenSearch / Elasticsearch instance, 
+> make sure to properly configure the `STAC_COLLECTIONS_INDEX` and `STAC_ITEMS_INDEX_PREFIX` to be unique and prefix-free.
 
 ## Collection authorization
 

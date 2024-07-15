@@ -139,3 +139,10 @@ class OIDC(SecurityBase, AuthenticationBackend):
                 detail="Not authenticated",
                 headers={"WWW-Authenticate": "Bearer"},
             )
+
+
+class NoAuth(AuthenticationBackend):
+    async def authenticate(
+        self, conn: HTTPConnection
+    ) -> tuple[AuthCredentials, BaseUser] | None:
+        return AuthCredentials([ROLE_ANONYMOUS]), UnauthenticatedUser()

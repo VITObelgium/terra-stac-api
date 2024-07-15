@@ -26,7 +26,7 @@ from stac_fastapi.opensearch.database_logic import (
 from starlette.middleware.authentication import AuthenticationMiddleware
 
 import terra_stac_api
-from terra_stac_api.auth import OIDC, GrantType, on_auth_error
+from terra_stac_api.auth import OIDC, GrantType, NoAuth, on_auth_error
 from terra_stac_api.config import (
     OIDC_ISSUER,
     ROLE_ADMIN,
@@ -46,10 +46,14 @@ settings = OpensearchSettings()
 session = Session.create_from_settings(settings)
 database_logic = DatabaseLogicAuth()
 
-auth = OIDC(
-    issuer=OIDC_ISSUER,
-    jwt_decode_options={"verify_aud": False},
-    allowed_grant_types=[GrantType.AUTHORIZATION_CODE, GrantType.PASSWORD],
+auth = (
+    OIDC(
+        issuer=OIDC_ISSUER,
+        jwt_decode_options={"verify_aud": False},
+        allowed_grant_types=[GrantType.AUTHORIZATION_CODE, GrantType.PASSWORD],
+    )
+    if OIDC_ISSUER
+    else NoAuth()
 )
 
 extensions = [
@@ -114,12 +118,15 @@ api = StacApi(
             ],
             [Security(auth)],
         ),
-    ],
+    ]
+    if not isinstance(auth, NoAuth)
+    else [],
     title=STAC_TITLE,
     description=STAC_DESCRIPTION,
     api_version=terra_stac_api.__version__,
 )
 app = api.app
+# if auth:
 app.add_middleware(AuthenticationMiddleware, backend=auth, on_error=on_auth_error)
 app.add_middleware(
     AccessLoggerMiddleware,

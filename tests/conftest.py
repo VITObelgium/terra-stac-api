@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 import pytest_asyncio
+from asgi_lifespan import LifespanManager
 from httpx import AsyncClient
 from stac_fastapi.opensearch.database_logic import ITEM_INDICES
 
@@ -38,7 +39,9 @@ async def app(api):
         await api.client.database.delete_items()
         await api.client.database.delete_collections()
     finally:
-        return api.app
+        # trigger lifespan events: https://fastapi.tiangolo.com/advanced/async-tests/#in-detail
+        async with LifespanManager(api.app) as lifespan_manager:
+            return lifespan_manager.app
 
 
 @pytest_asyncio.fixture(scope="session")
@@ -86,8 +89,9 @@ def extra_item():
 
 
 @pytest_asyncio.fixture(autouse=True)
-async def setup_es(api, collections, items):
+async def setup_es(api, app, collections, items):
     # setup
+    await delete_all(api)
     for collection in collections.values():
         await api.client.database.create_collection(collection, refresh=True)
     for collection, c_items in items.items():
@@ -95,16 +99,12 @@ async def setup_es(api, collections, items):
             await api.client.database.create_item(item, refresh=True)
     yield
     # teardown
-    await api.client.database._refresh()
-    await api.client.database.client.indices.delete(
-        index=ITEM_INDICES
-    )  # , expand_wildcards="all")
-    await api.client.database.delete_collections()
-    # await api.client.database.client.indices.delete(index=COLLECTIONS_INDEX)
-    await api.client.database._refresh()
+    await delete_all(api)
 
-    # for collection in await api.client.database.get_all_collections(token=None, limit=100):
-    #     await api.client.database.delete_collection(collection['id'])
-    # await api.client.database._refresh()
-    # await api.client.database.delete_collections()
-    # await api.client.database.client.indices.delete(index=ITEM_INDICES)
+
+async def delete_all(api):
+    await api.client.database.client.indices.refresh(index="_all")
+    await api.client.database.client.indices.delete(
+        index=ITEM_INDICES, expand_wildcards="all"
+    )
+    await api.client.database.delete_collections()

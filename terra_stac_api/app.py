@@ -19,7 +19,10 @@ from stac_fastapi.extensions.core import (
 )
 from stac_fastapi.extensions.third_party import BulkTransactionExtension
 from stac_fastapi.opensearch.config import OpensearchSettings
-from stac_fastapi.opensearch.database_logic import create_collection_index
+from stac_fastapi.opensearch.database_logic import (
+    create_collection_index,
+    create_index_templates,
+)
 from starlette.middleware.authentication import AuthenticationMiddleware
 
 from terra_stac_api.auth import OIDC, GrantType, on_auth_error
@@ -35,7 +38,7 @@ from terra_stac_api.core import (
     CoreClientAuth,
     TransactionsClientAuth,
 )
-from terra_stac_api.db import DatabaseLogicAuth, create_index_templates
+from terra_stac_api.db import DatabaseLogicAuth
 from terra_stac_api.serializer import CustomCollectionSerializer
 
 settings = OpensearchSettings()

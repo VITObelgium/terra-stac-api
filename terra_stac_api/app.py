@@ -25,6 +25,7 @@ from stac_fastapi.opensearch.database_logic import (
 )
 from starlette.middleware.authentication import AuthenticationMiddleware
 
+import terra_stac_api
 from terra_stac_api.auth import OIDC, GrantType, on_auth_error
 from terra_stac_api.config import (
     OIDC_ISSUER,
@@ -116,6 +117,7 @@ api = StacApi(
     ],
     title=STAC_TITLE,
     description=STAC_DESCRIPTION,
+    api_version=terra_stac_api.__version__,
 )
 app = api.app
 app.add_middleware(AuthenticationMiddleware, backend=auth, on_error=on_auth_error)

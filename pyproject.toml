@@ -31,6 +31,7 @@ ES_USE_SSL = {value = "false", skip_if_set = true}
 ES_VERIFY_CERTS = {value= "false", skip_if_set = true}
 ROLE_ADMIN = {value = "stac-admin", skip_if_set = true}
 ROLE_EDITOR = {value = "stac-editor", skip_if_set = true}
+OIDC_ISSUER = {value = "https://example.com"}
 
 [build-system]
 requires = ["setuptools", "wheel"]

@@ -168,7 +168,9 @@ class CoreClientAuth(CoreClient):
                     raise UnauthorizedError("Unauthorized, please authenticate")
         else:
             # only search authorized collections
-            search_request.collections = list(collections_authorized)
+            search_request.collections = (
+                list(collections_authorized) if collections_authorized else None
+            )
         return await super().post_search(search_request, request)
 
 

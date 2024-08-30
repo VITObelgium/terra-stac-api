@@ -1,7 +1,7 @@
 from datetime import datetime as datetime_type
 from datetime import timezone
 from enum import Enum
-from typing import List, Optional
+from typing import List, Optional, Union
 from urllib.parse import urljoin
 
 import attr
@@ -16,7 +16,7 @@ from stac_fastapi.core.serializers import ItemSerializer
 from stac_fastapi.extensions.third_party.bulk_transactions import Items
 from stac_fastapi.types import stac as stac_types
 from stac_fastapi.types.search import BaseSearchPostRequest
-from stac_fastapi.types.stac import Collection, Collections, Item, ItemCollection
+from stac_pydantic import Collection, Item, ItemCollection
 from stac_pydantic.links import Relations
 from stac_pydantic.shared import MimeTypes
 from starlette import status
@@ -98,12 +98,13 @@ class CoreClientAuth(CoreClient):
     landing_page_id = attr.ib(default=config.STAC_ID)
 
     @overrides
-    async def all_collections(self, **kwargs) -> Collections:
+    async def all_collections(self, **kwargs) -> stac_types.Collections:
+        # TODO: implement paging
         request: Request = kwargs["request"]
         base_url = str(request.base_url)
-        return Collections(
+        return stac_types.Collections(
             collections=[
-                self.collection_serializer.db_to_stac(c, base_url=base_url)
+                self.collection_serializer.db_to_stac(c, request=request)
                 for c in await self.database.get_all_authorized_collections(
                     request.auth.scopes
                 )
@@ -128,9 +129,10 @@ class CoreClientAuth(CoreClient):
         )
 
     @overrides
-    async def get_collection(self, collection_id: str, **kwargs) -> Collection:
+    async def get_collection(
+        self, collection_id: str, **kwargs
+    ) -> stac_types.Collection:
         request: Request = kwargs["request"]
-        base_url = str(request.base_url)
         # collection = await self.database.find_collection(collection_id=collection_id)
         collection = await ensure_authorized_for_collection(
             self.database,
@@ -139,10 +141,16 @@ class CoreClientAuth(CoreClient):
             collection_id,
             AccessType.READ,
         )
-        return self.collection_serializer.db_to_stac(collection, base_url)
+        return self.collection_serializer.db_to_stac(
+            collection=collection,
+            request=request,
+            extensions=[type(ext).__name__ for ext in self.extensions],
+        )
 
     @overrides
-    async def get_item(self, item_id: str, collection_id: str, **kwargs) -> Item:
+    async def get_item(
+        self, item_id: str, collection_id: str, **kwargs
+    ) -> stac_types.Item:
         request: Request = kwargs["request"]
         await self.get_collection(
             collection_id=collection_id, request=request
@@ -152,7 +160,7 @@ class CoreClientAuth(CoreClient):
     @overrides
     async def post_search(
         self, search_request: BaseSearchPostRequest, request: Request
-    ) -> ItemCollection:
+    ) -> stac_types.ItemCollection:
         collections_authorized = {
             c["id"]
             for c in await self.database.get_all_authorized_collections(
@@ -185,8 +193,8 @@ class TransactionsClientAuth(TransactionsClient):
     database: DatabaseLogicAuth
 
     async def ensure_collection_auth_present(
-        self, collection: stac_types.Collection, request: Request
-    ) -> stac_types.Collection:
+        self, collection: Collection, request: Request
+    ) -> Collection:
         """
         Make sure the collection authorizations are set. They can be provided either in the collection body (_auth)
         or the HTTP request parameters (_auth_read, _auth_write).
@@ -196,21 +204,23 @@ class TransactionsClientAuth(TransactionsClient):
         :param request: request object
         :return:
         """
-        if _auth not in collection:
-            collection[_auth] = dict()
+        if _auth not in collection.model_extra:
+            collection.model_extra[_auth] = dict()
 
         for at in AccessType:
             param = f"{_auth}_{at.value}"
             if param in request.query_params:
-                collection[_auth][at.value] = request.query_params.getlist(param)
+                collection.model_extra[_auth][at.value] = request.query_params.getlist(
+                    param
+                )
         if (
             not (
-                AccessType.READ.value in collection[_auth]
-                and AccessType.WRITE.value in collection[_auth]
+                AccessType.READ.value in collection.model_extra[_auth]
+                and AccessType.WRITE.value in collection.model_extra[_auth]
             )
-            or ROLE_ANONYMOUS in collection[_auth][AccessType.WRITE.value]
+            or ROLE_ANONYMOUS in collection.model_extra[_auth][AccessType.WRITE.value]
             or (
-                ROLE_ANONYMOUS in collection[_auth][AccessType.READ.value]
+                ROLE_ANONYMOUS in collection.model_extra[_auth][AccessType.READ.value]
                 and not (
                     ROLE_ADMIN in request.auth.scopes
                     or (
@@ -227,7 +237,7 @@ class TransactionsClientAuth(TransactionsClient):
 
     @overrides
     async def create_item(
-        self, collection_id: str, item: stac_types.Item, **kwargs
+        self, collection_id: str, item: Union[Item, ItemCollection], **kwargs
     ) -> stac_types.Item:
         request = kwargs["request"]
         await ensure_authorized_for_collection(
@@ -241,7 +251,7 @@ class TransactionsClientAuth(TransactionsClient):
 
     @overrides
     async def update_item(
-        self, collection_id: str, item_id: str, item: stac_types.Item, **kwargs
+        self, collection_id: str, item_id: str, item: Item, **kwargs
     ) -> stac_types.Item:
         request = kwargs["request"]
         await ensure_authorized_for_collection(
@@ -252,12 +262,13 @@ class TransactionsClientAuth(TransactionsClient):
             AccessType.WRITE,
         )
         # re-implement because super method doesn't pass request to delete operation
+        item = item.model_dump(mode="json")
         base_url = str(request.base_url)
         now = datetime_type.now(timezone.utc).isoformat().replace("+00:00", "Z")
         item["properties"]["updated"] = now
         await self.database.check_collection_exists(collection_id)
         await self.delete_item(item_id=item_id, collection_id=collection_id, **kwargs)
-        await self.create_item(collection_id=collection_id, item=item, **kwargs)
+        await self.create_item(collection_id=collection_id, item=Item(**item), **kwargs)
 
         return ItemSerializer.db_to_stac(item, base_url)
 
@@ -277,7 +288,7 @@ class TransactionsClientAuth(TransactionsClient):
 
     @overrides
     async def create_collection(
-        self, collection: stac_types.Collection, **kwargs
+        self, collection: Collection, **kwargs
     ) -> stac_types.Collection:
         collection = await self.ensure_collection_auth_present(
             collection, kwargs["request"]
@@ -286,20 +297,22 @@ class TransactionsClientAuth(TransactionsClient):
 
     @overrides
     async def update_collection(
-        self, collection: stac_types.Collection, **kwargs
+        self, collection_id: str, collection: Collection, **kwargs
     ) -> stac_types.Collection:
         request = kwargs["request"]
         await ensure_authorized_for_collection(
             self.database,
             request.user,
             request.auth.scopes,
-            collection["id"],
+            collection.id,
             AccessType.WRITE,
         )
         collection = await self.ensure_collection_auth_present(
             collection, kwargs["request"]
         )
-        return await super().update_collection(collection, **kwargs)
+        return await super().update_collection(
+            collection_id=collection_id, collection=collection, **kwargs
+        )
 
     @overrides
     async def delete_collection(

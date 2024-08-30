@@ -8,9 +8,14 @@ from stac_fastapi.api.models import create_get_request_model, create_post_reques
 from stac_fastapi.api.routes import Scope
 from stac_fastapi.core.core import EsAsyncBaseFiltersClient
 from stac_fastapi.core.extensions import QueryExtension
+from stac_fastapi.core.extensions.aggregation import (
+    EsAggregationExtensionGetRequest,
+    EsAggregationExtensionPostRequest,
+    EsAsyncAggregationClient,
+)
 from stac_fastapi.core.session import Session
 from stac_fastapi.extensions.core import (
-    ContextExtension,
+    AggregationExtension,
     FieldsExtension,
     FilterExtension,
     SortExtension,
@@ -56,7 +61,15 @@ auth = (
     else NoAuth()
 )
 
-extensions = [
+aggregation_extension = AggregationExtension(
+    client=EsAsyncAggregationClient(
+        database=database_logic, session=session, settings=settings
+    )
+)
+aggregation_extension.POST = EsAggregationExtensionPostRequest
+aggregation_extension.GET = EsAggregationExtensionGetRequest
+
+search_extensions = [
     TransactionExtension(
         client=TransactionsClientAuth(
             database=database_logic, session=session, settings=settings
@@ -73,11 +86,13 @@ extensions = [
     QueryExtension(),
     SortExtension(),
     TokenPaginationExtension(),
-    ContextExtension(),
 ]
 
-get_request_model = create_get_request_model(extensions)
-post_request_model = create_post_request_model(extensions)
+extensions = [aggregation_extension] + search_extensions
+database_logic.extensions = [type(ext).__name__ for ext in extensions]
+
+get_request_model = create_get_request_model(search_extensions)
+post_request_model = create_post_request_model(search_extensions)
 
 
 @asynccontextmanager
@@ -105,7 +120,7 @@ api = StacApi(
         ),  # only allow editors or admins to create new collections
         (
             [
-                Scope(path="/collections", method="PUT"),
+                Scope(path="/collections/{collection_id}", method="PUT"),
                 Scope(
                     path="/collections/{collection_id}/items/{item_id}", method="PUT"
                 ),

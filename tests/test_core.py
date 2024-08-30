@@ -162,7 +162,7 @@ async def test_search_protected_fields(client):
         str(ENDPOINT_SEARCH),
         params={
             "collections": [COLLECTION_PROTECTED],
-            "fields": {"include": ["properties.eo:cloud_cover"]},
+            "fields": "properties.eo:cloud_cover",
         },
         auth=MockAuth(ROLE_PROTECTED),
     )

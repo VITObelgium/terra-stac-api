@@ -30,7 +30,7 @@ async def test_create_collection_authorized(client, extra_collection):
     response = await client.post(
         str(ENDPOINT_COLLECTIONS), json=extra_collection, auth=auth
     )
-    assert response.status_code == codes.OK
+    assert response.status_code == codes.CREATED
 
     response = await client.get(
         str(ENDPOINT_COLLECTIONS / extra_collection["id"]), auth=auth
@@ -40,14 +40,18 @@ async def test_create_collection_authorized(client, extra_collection):
 
 async def test_update_collection(client, collections):
     protected = collections[COLLECTION_PROTECTED]
-    response = await client.put(str(ENDPOINT_COLLECTIONS), json=protected)
+    response = await client.put(
+        str(ENDPOINT_COLLECTIONS / protected["id"]), json=protected
+    )
     assert response.status_code == codes.UNAUTHORIZED
 
 
 async def test_update_collection_no_write_permission(client, collections):
     protected = collections[COLLECTION_S2_TOC_V2]
     response = await client.put(
-        str(ENDPOINT_COLLECTIONS), json=protected, auth=MockAuth(ROLE_PROTECTED)
+        str(ENDPOINT_COLLECTIONS / protected["id"]),
+        json=protected,
+        auth=MockAuth(ROLE_PROTECTED),
     )
     assert response.status_code == codes.FORBIDDEN
 
@@ -58,7 +62,9 @@ async def test_update_collection_authorized(client, collections):
     collection["description"] = description_updated
     auth = MockAuth(ROLE_SENTINEL2, ROLE_PROTECTED)
 
-    response = await client.put(str(ENDPOINT_COLLECTIONS), json=collection, auth=auth)
+    response = await client.put(
+        str(ENDPOINT_COLLECTIONS / collection["id"]), json=collection, auth=auth
+    )
     assert response.status_code == codes.OK
 
     response = await client.get(
@@ -117,7 +123,7 @@ async def test_create_item_authorized(client, extra_item):
         json=extra_item,
         auth=MockAuth(ROLE_SENTINEL2),
     )
-    assert response.status_code == codes.OK
+    assert response.status_code == codes.CREATED
 
 
 async def test_update_item(client, items):

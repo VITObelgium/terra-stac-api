@@ -41,7 +41,7 @@ async def app(api):
     finally:
         # trigger lifespan events: https://fastapi.tiangolo.com/advanced/async-tests/#in-detail
         async with LifespanManager(api.app) as lifespan_manager:
-            return lifespan_manager.app
+            yield lifespan_manager.app
 
 
 @pytest_asyncio.fixture(scope="session")

@@ -1,8 +1,8 @@
 import logging
-from typing import Any, Dict, Iterable, List, Union
+from typing import Any, Dict, Iterable, List, Optional, Union
 
 import stac_fastapi.opensearch.database_logic
-from opensearchpy import exceptions
+from opensearchpy import Search, exceptions
 from stac_fastapi.opensearch.config import AsyncOpensearchSettings
 from stac_fastapi.opensearch.database_logic import (
     COLLECTIONS_INDEX,
@@ -10,7 +10,7 @@ from stac_fastapi.opensearch.database_logic import (
     DatabaseLogic,
     index_by_collection_id,
 )
-from stac_fastapi.types.errors import NotFoundError
+from stac_fastapi.types.errors import DatabaseError, NotFoundError
 from stac_fastapi.types.stac import Collection
 
 from terra_stac_api.config import ROLE_ADMIN
@@ -80,3 +80,29 @@ class DatabaseLogicAuth(DatabaseLogic):
 
     async def _refresh(self):
         await self.client.indices.refresh()
+
+    async def aggregate(
+        self,
+        collection_ids: Optional[List[str]],
+        aggregations: List[str],
+        search: Search,
+        centroid_geohash_grid_precision: int,
+        centroid_geohex_grid_precision: int,
+        centroid_geotile_grid_precision: int,
+        geometry_geohash_grid_precision: int,
+        geometry_geotile_grid_precision: int,
+        ignore_unavailable: Optional[bool] = True,
+    ):
+        if collection_ids is None or len(collection_ids) == 0:
+            raise DatabaseError()
+        return await super().aggregate(
+            collection_ids,
+            aggregations,
+            search,
+            centroid_geohash_grid_precision,
+            centroid_geohex_grid_precision,
+            centroid_geotile_grid_precision,
+            geometry_geohash_grid_precision,
+            geometry_geotile_grid_precision,
+            ignore_unavailable,
+        )

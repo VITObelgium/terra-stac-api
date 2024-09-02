@@ -11,7 +11,6 @@ from stac_fastapi.core.extensions import QueryExtension
 from stac_fastapi.core.extensions.aggregation import (
     EsAggregationExtensionGetRequest,
     EsAggregationExtensionPostRequest,
-    EsAsyncAggregationClient,
 )
 from stac_fastapi.core.session import Session
 from stac_fastapi.extensions.core import (
@@ -31,6 +30,7 @@ from stac_fastapi.opensearch.database_logic import (
 from starlette.middleware.authentication import AuthenticationMiddleware
 
 import terra_stac_api
+from terra_stac_api.aggregation_client import AggregationClientAuth
 from terra_stac_api.auth import OIDC, GrantType, NoAuth, on_auth_error
 from terra_stac_api.config import (
     OIDC_ISSUER,
@@ -62,7 +62,7 @@ auth = (
 )
 
 aggregation_extension = AggregationExtension(
-    client=EsAsyncAggregationClient(
+    client=AggregationClientAuth(
         database=database_logic, session=session, settings=settings
     )
 )

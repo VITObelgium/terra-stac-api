@@ -1,6 +1,7 @@
 from typing import Generator, List, Tuple
 
 import httpx
+from fastapi.openapi.models import OAuth2
 from httpx._models import Request, Response
 from starlette.authentication import (
     AuthCredentials,
@@ -23,7 +24,8 @@ class MockAuthBackend(OIDC):
         allowed_grant_types: List[GrantType] = ...,
         jwt_decode_options: dict | None = None,
     ):
-        pass
+        self.model = OAuth2(flows=dict())
+        self.scheme_name = scheme_name
 
     async def authenticate(
         self, conn: HTTPConnection

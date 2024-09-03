@@ -38,10 +38,12 @@ async def app(api):
         # these indices might not exist, so put in try block
         await api.client.database.delete_items()
         await api.client.database.delete_collections()
-    finally:
-        # trigger lifespan events: https://fastapi.tiangolo.com/advanced/async-tests/#in-detail
-        async with LifespanManager(api.app) as lifespan_manager:
-            return lifespan_manager.app
+    except:
+        pass
+
+    # trigger lifespan events: https://fastapi.tiangolo.com/advanced/async-tests/#in-detail
+    async with LifespanManager(api.app) as lifespan_manager:
+        yield lifespan_manager.app
 
 
 @pytest_asyncio.fixture(scope="session")

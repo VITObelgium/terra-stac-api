@@ -1,11 +1,11 @@
 import json
 
-from constants import ENDPOINT_AGGREGATE
 from httpx import codes
 
 from .constants import (
     COLLECTION_PROTECTED,
     COLLECTION_S2_TOC_V2,
+    ENDPOINT_AGGREGATE,
     ENDPOINT_COLLECTIONS,
     ROLE_PROTECTED,
 )

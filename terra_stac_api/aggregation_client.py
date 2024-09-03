@@ -20,13 +20,14 @@ class AggregationClientAuth(EsAsyncAggregationClient):
     @overrides
     async def get_aggregations(self, collection_id: Optional[str] = None, **kwargs):
         request = kwargs["request"]
-        await ensure_authorized_for_collection(
-            self.database,
-            request.user,
-            request.auth.scopes,
-            collection_id,
-            AccessType.READ,
-        )
+        if collection_id is not None:
+            await ensure_authorized_for_collection(
+                self.database,
+                request.user,
+                request.auth.scopes,
+                collection_id,
+                AccessType.READ,
+            )
         return await super().get_aggregations(collection_id, **kwargs)
 
     @overrides

@@ -1,5 +1,6 @@
 import asyncio
 import json
+import logging
 from pathlib import Path
 
 import pytest
@@ -17,6 +18,7 @@ terra_stac_api.auth.OIDC = MockAuthBackend
 import terra_stac_api.app  # noqa
 
 RESOURCES = Path(__file__).parent / "resources"
+logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(scope="session")
@@ -38,7 +40,8 @@ async def app(api):
         # these indices might not exist, so put in try block
         await api.client.database.delete_items()
         await api.client.database.delete_collections()
-    except:
+    except Exception as e:
+        logger.warning(e)
         pass
 
     # trigger lifespan events: https://fastapi.tiangolo.com/advanced/async-tests/#in-detail

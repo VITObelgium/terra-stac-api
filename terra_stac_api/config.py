@@ -1,14 +1,20 @@
-import os
+from typing import List, Optional
 
-ROLE_ADMIN = os.getenv("ROLE_ADMIN", "stac-admin")
-ROLE_EDITOR = os.getenv("ROLE_EDITOR", "stac-editor")
-ROLE_ANONYMOUS = "anonymous"
-EDITOR_PUBLIC_COLLECTIONS = (
-    os.getenv("EDITOR_PUBLIC_COLLECTIONS", "false").lower() == "true"
-)
+from pydantic import Field
+from pydantic_settings import BaseSettings
 
-OIDC_ISSUER = os.getenv("OIDC_ISSUER")
 
-STAC_ID = os.getenv("STAC_ID", "terra-stac-api")
-STAC_TITLE = os.getenv("STAC_TITLE", "terra-stac-api")
-STAC_DESCRIPTION = os.getenv("STAC_DESCRIPTION", "STAC API")
+class Settings(BaseSettings):
+    role_admin: str = "stac-admin"
+    role_editor: str = "stac-editor"
+    role_anonymous: str = "anonymous"
+    editor_public_collections: bool = False
+    oidc_issuer: Optional[str] = None
+    stac_id: str = "terra-stac-api"
+    stac_title: str = "terra-stac-api"
+    stac_description: str = "STAC API"
+    cors_allow_origins: List[str] = Field(default_factory=lambda: ["*"])
+    cors_allow_methods: List[str] = Field(
+        default_factory=lambda: ["OPTIONS", "GET", "POST"]
+    )
+    cors_allow_credentials: bool = True

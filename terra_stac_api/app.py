@@ -2,8 +2,10 @@ import logging
 from contextlib import asynccontextmanager
 
 from asgi_logger import AccessLoggerMiddleware
+from brotli_asgi import BrotliMiddleware
 from fastapi import FastAPI, Security
 from stac_fastapi.api.app import StacApi
+from stac_fastapi.api.middleware import ProxyHeaderMiddleware
 from stac_fastapi.api.models import create_get_request_model, create_post_request_model
 from stac_fastapi.api.routes import Scope
 from stac_fastapi.core.core import EsAsyncBaseFiltersClient
@@ -27,18 +29,13 @@ from stac_fastapi.opensearch.database_logic import (
     create_collection_index,
     create_index_templates,
 )
+from starlette.middleware import Middleware
 from starlette.middleware.authentication import AuthenticationMiddleware
+from starlette.middleware.cors import SAFELISTED_HEADERS, CORSMiddleware
 
-import terra_stac_api
+import terra_stac_api.config
 from terra_stac_api.aggregation_client import AggregationClientAuth
 from terra_stac_api.auth import OIDC, GrantType, NoAuth, on_auth_error
-from terra_stac_api.config import (
-    OIDC_ISSUER,
-    ROLE_ADMIN,
-    ROLE_EDITOR,
-    STAC_DESCRIPTION,
-    STAC_TITLE,
-)
 from terra_stac_api.core import (
     BulkTransactionsClientAuth,
     CoreClientAuth,
@@ -47,17 +44,18 @@ from terra_stac_api.core import (
 from terra_stac_api.db import DatabaseLogicAuth
 from terra_stac_api.serializer import CustomCollectionSerializer
 
+app_settings = terra_stac_api.config.Settings()
 settings = OpensearchSettings()
 session = Session.create_from_settings(settings)
 database_logic = DatabaseLogicAuth()
 
 auth = (
     OIDC(
-        issuer=OIDC_ISSUER,
+        issuer=app_settings.oidc_issuer,
         jwt_decode_options={"verify_aud": False},
         allowed_grant_types=[GrantType.AUTHORIZATION_CODE, GrantType.PASSWORD],
     )
-    if OIDC_ISSUER
+    if app_settings.oidc_issuer
     else NoAuth()
 )
 
@@ -116,7 +114,13 @@ api = StacApi(
     route_dependencies=[
         (
             [Scope(path="/collections", method="POST")],
-            [Security(auth.require_any_role(ROLE_ADMIN, ROLE_EDITOR))],
+            [
+                Security(
+                    auth.require_any_role(
+                        app_settings.role_admin, app_settings.role_editor
+                    )
+                )
+            ],
         ),  # only allow editors or admins to create new collections
         (
             [
@@ -136,18 +140,28 @@ api = StacApi(
     ]
     if not isinstance(auth, NoAuth)
     else [],
-    title=STAC_TITLE,
-    description=STAC_DESCRIPTION,
+    title=app_settings.stac_title,
+    description=app_settings.stac_description,
     api_version=terra_stac_api.__version__,
+    middlewares=[
+        Middleware(BrotliMiddleware),
+        Middleware(
+            CORSMiddleware,
+            allow_origins=app_settings.cors_allow_origins,
+            allow_methods=app_settings.cors_allow_methods,
+            allow_credentials=app_settings.cors_allow_credentials,
+            allow_headers=SAFELISTED_HEADERS,
+        ),
+        Middleware(ProxyHeaderMiddleware),
+        Middleware(AuthenticationMiddleware, backend=auth, on_error=on_auth_error),
+        Middleware(
+            AccessLoggerMiddleware,
+            format='%(t)s %(client_addr)s "%(request_line)s" %(s)s %(B)s %(M)s',
+            logger=logging.getLogger("terra_stac_api.access"),
+        ),
+    ],
 )
 app = api.app
-# if auth:
-app.add_middleware(AuthenticationMiddleware, backend=auth, on_error=on_auth_error)
-app.add_middleware(
-    AccessLoggerMiddleware,
-    format='%(t)s %(client_addr)s "%(request_line)s" %(s)s %(B)s %(M)s',
-    logger=logging.getLogger("terra_stac_api.access"),
-)
 app.router.lifespan_context = lifespan
 
 

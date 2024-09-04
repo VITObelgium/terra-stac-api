@@ -4,6 +4,7 @@ ROLE_PROTECTED = "protected"
 ROLE_ADMIN = "stac-admin"
 ROLE_EDITOR = "stac-editor"
 ROLE_SENTINEL2 = "sentinel2"
+ROLE_ANONYMOUS = "anonymous"
 
 ENDPOINT_COLLECTIONS = URL("/collections")
 ENDPOINT_SEARCH = URL("/search")

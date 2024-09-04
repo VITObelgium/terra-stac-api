@@ -22,17 +22,12 @@ from stac_pydantic.shared import MimeTypes
 from starlette import status
 from starlette.authentication import BaseUser
 
-from terra_stac_api import config
-from terra_stac_api.config import (
-    EDITOR_PUBLIC_COLLECTIONS,
-    ROLE_ADMIN,
-    ROLE_ANONYMOUS,
-    ROLE_EDITOR,
-)
+from terra_stac_api.config import Settings
 from terra_stac_api.db import DatabaseLogicAuth
 from terra_stac_api.errors import ForbiddenError, UnauthorizedError
 
 _auth = "_auth"
+settings = Settings()
 
 
 class AccessType(str, Enum):
@@ -89,13 +84,13 @@ def sync_ensure_authorized_for_collection(
 
 
 def is_admin(scopes: List[str]) -> bool:
-    return ROLE_ADMIN in scopes
+    return settings.role_admin in scopes
 
 
 @attr.s
 class CoreClientAuth(CoreClient):
     database: DatabaseLogicAuth
-    landing_page_id = attr.ib(default=config.STAC_ID)
+    landing_page_id = attr.ib(default=settings.stac_id)
 
     @overrides
     async def all_collections(self, **kwargs) -> stac_types.Collections:
@@ -218,13 +213,16 @@ class TransactionsClientAuth(TransactionsClient):
                 AccessType.READ.value in collection.model_extra[_auth]
                 and AccessType.WRITE.value in collection.model_extra[_auth]
             )
-            or ROLE_ANONYMOUS in collection.model_extra[_auth][AccessType.WRITE.value]
+            or settings.role_anonymous
+            in collection.model_extra[_auth][AccessType.WRITE.value]
             or (
-                ROLE_ANONYMOUS in collection.model_extra[_auth][AccessType.READ.value]
+                settings.role_anonymous
+                in collection.model_extra[_auth][AccessType.READ.value]
                 and not (
-                    ROLE_ADMIN in request.auth.scopes
+                    settings.role_admin in request.auth.scopes
                     or (
-                        ROLE_EDITOR in request.auth.scopes and EDITOR_PUBLIC_COLLECTIONS
+                        settings.role_editor in request.auth.scopes
+                        and settings.editor_public_collections
                     )
                 )
             )

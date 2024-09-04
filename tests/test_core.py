@@ -1,6 +1,5 @@
 from httpx import codes
 
-from terra_stac_api.config import ROLE_ANONYMOUS
 from terra_stac_api.core import AccessType, _auth
 
 from .constants import (
@@ -9,6 +8,7 @@ from .constants import (
     ENDPOINT_COLLECTIONS,
     ENDPOINT_SEARCH,
     ROLE_ADMIN,
+    ROLE_ANONYMOUS,
     ROLE_PROTECTED,
 )
 from .mock_auth import MockAuth

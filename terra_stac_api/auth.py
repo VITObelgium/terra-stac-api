@@ -29,7 +29,9 @@ from starlette.requests import HTTPConnection
 from starlette.responses import JSONResponse
 from starlette.status import HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN
 
-from terra_stac_api.config import ROLE_ANONYMOUS
+from terra_stac_api.config import Settings
+
+settings = Settings()
 
 
 class GrantType(str, Enum):
@@ -115,12 +117,12 @@ class OIDC(SecurityBase, AuthenticationBackend):
         scheme, param = get_authorization_scheme_param(authz_header)
 
         if not authz_header or scheme.lower() != "bearer":
-            return AuthCredentials([ROLE_ANONYMOUS]), UnauthenticatedUser()
+            return AuthCredentials([settings.role_anonymous]), UnauthenticatedUser()
 
         try:
             claims = jwt.decode(param, self.jwks, options=self.jwt_decode_options)
             scopes = claims["realm_access"]["roles"]
-            scopes.append(ROLE_ANONYMOUS)
+            scopes.append(settings.role_anonymous)
         except JWTError:
             raise AuthenticationError("Invalid token")
         return AuthCredentials(scopes), SimpleUser(claims["preferred_username"])
@@ -145,4 +147,4 @@ class NoAuth(AuthenticationBackend):
     async def authenticate(
         self, conn: HTTPConnection
     ) -> tuple[AuthCredentials, BaseUser] | None:
-        return AuthCredentials([ROLE_ANONYMOUS]), UnauthenticatedUser()
+        return AuthCredentials([settings.role_anonymous]), UnauthenticatedUser()

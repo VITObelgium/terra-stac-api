@@ -13,8 +13,9 @@ from stac_fastapi.opensearch.database_logic import (
 from stac_fastapi.types.errors import DatabaseError, NotFoundError
 from stac_fastapi.types.stac import Collection
 
-from terra_stac_api.config import ROLE_ADMIN
+from terra_stac_api.config import Settings
 
+settings = Settings()
 logger = logging.getLogger(__name__)
 
 ES_COLLECTIONS_MAPPINGS["properties"]["_auth"] = {
@@ -60,7 +61,7 @@ class DatabaseLogicAuth(DatabaseLogic):
         # https://github.com/stac-utils/stac-fastapi-elasticsearch/issues/65
         body = (
             {}
-            if ROLE_ADMIN in authorizations
+            if settings.role_admin in authorizations
             else {
                 "query": {"bool": {"must": [{"terms": {"_auth.read": authorizations}}]}}
             }

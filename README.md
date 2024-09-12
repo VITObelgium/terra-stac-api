@@ -20,18 +20,39 @@ The application can be configured via environment variables. Here is an overview
 | `ROLE_EDITOR`               | Role for editors                                                         | stac-editor   |
 | `EDITOR_PUBLIC_COLLECTIONS` | Indicates whether editors can create public collections                  | false         |
 
-
 ## Dependencies
-The `terra-stac-api` application relies on a **OpenSearch** / **Elasticsearch** database to store the STAC Collections and Items.
-The necessary indices will be created automatically by the application on application start-up (collections index) or when creating new collections (item index). 
+
+The `terra-stac-api` application relies on a **OpenSearch** / **Elasticsearch** database to store the STAC Collections
+and Items.
+The necessary indices will be created automatically by the application on application start-up (collections index) or
+when creating new collections (item index).
 
 > [!IMPORTANT]
-> If you want to run multiple instances of the `terra-stac-api` with same OpenSearch / Elasticsearch instance, 
-> make sure to properly configure the `STAC_COLLECTIONS_INDEX` and `STAC_ITEMS_INDEX_PREFIX` to be unique and prefix-free.
+> If you want to run multiple instances of the `terra-stac-api` with same OpenSearch / Elasticsearch instance,
+> make sure to properly configure the `STAC_COLLECTIONS_INDEX` and `STAC_ITEMS_INDEX_PREFIX` to be unique and
+> prefix-free.
 
-## Collection authorization
+## Authorization integration
 
-Specific authorizations on collections can be configured in the STAC collection document. You can grant read and write
+The application supports authorization via the use of OpenID Connect (OIDC) access tokens. The access token should be sent as a Bearer token in the `Authorization` header of a HTTP request. 
+The roles of a user are read from the `$.realm_access.roles` property in the access token. Users can be assigned to a
+role in the authorization server (eg. Keycloak).
+Specific permissions can be configured based on these roles.
+
+### Application-level authorization
+
+On the application-level, there are two important roles: admin and editor.
+The specific names of these roles (how they appear in the access tokens) can be defined via environment variables.
+
+| Role   | Environment variable | Description                                                                                                                      |
+|--------|----------------------|----------------------------------------------------------------------------------------------------------------------------------|
+| Admin  | `ROLE_ADMIN`         | All CRUD operations on all collections. Create public collections.                                                               |
+| Editor | `ROLE_EDITOR`        | Create non-public collections. Allowed to create public collections when the `EDITOR_PUBLIC_COLLECTIONS` feature flag is enabled |
+
+### Collection-level authorization
+
+Specific authorizations on the collection-level can be configured in the STAC collection document. You can grant read
+and write
 access to specific roles with the `_auth` field.
 A special 'role' is dedicated to unauthenticated users: **anonymous**. Only users with role `$ROLE_ADMIN` can create
 collections open to the public.
@@ -39,19 +60,20 @@ For example:
 
 ```json
 {
-  "_auth": {
-    "read": [
-      "anonymous"
-    ],
-    "write": [
-      "stac-admin",
-      "stac-editor"
-    ]
-  }
+    "_auth": {
+        "read": [
+            "anonymous"
+        ],
+        "write": [
+            "stac-admin",
+            "stac-editor"
+        ]
+    }
 }
 ```
 
-If you don't want to store the collection authorizations in your STAC document, you can also send these details as HTTP
+If you don't want to store the collection authorizations in your (local) STAC document, you can also send these details
+as HTTP
 query parameters when creating the collection. These parameters are `_auth_read` and `_auth_write`. Multiple roles can
 be provided by specifying the query parameter multiple times.
 

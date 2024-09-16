@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     role_anonymous: str = "anonymous"
     editor_public_collections: bool = False
     oidc_issuer: Optional[str] = None
+    oidc_roles_claim: str = "realm_access.roles"
     stac_id: str = "terra-stac-api"
     stac_title: str = "terra-stac-api"
     stac_description: str = "STAC API"

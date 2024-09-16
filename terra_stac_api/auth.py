@@ -5,6 +5,7 @@ import urllib.request
 from enum import Enum
 from typing import Callable, List, Optional
 
+import jsonpath_ng
 from fastapi import Depends, HTTPException, Request
 from fastapi.openapi.models import (
     OAuth2,
@@ -104,6 +105,7 @@ class OIDC(SecurityBase, AuthenticationBackend):
             flows.implicit = OAuthFlowImplicit(authorizationUrl=authz_endpoint)
 
         self.model = OAuth2(flows=flows)
+        self._roles_claim_path = jsonpath_ng.parse(settings.oidc_roles_claim)
 
     async def authenticate(
         self, conn: HTTPConnection
@@ -121,7 +123,7 @@ class OIDC(SecurityBase, AuthenticationBackend):
 
         try:
             claims = jwt.decode(param, self.jwks, options=self.jwt_decode_options)
-            scopes = claims["realm_access"]["roles"]
+            scopes = self._roles_claim_path.find(claims)[0].value
             scopes.append(settings.role_anonymous)
         except JWTError:
             raise AuthenticationError("Invalid token")

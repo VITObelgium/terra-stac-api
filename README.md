@@ -6,19 +6,20 @@
 
 The application can be configured via environment variables. Here is an overview of the most important settings:
 
-| Environment variable        | Description                                                              | Default value |
-|-----------------------------|--------------------------------------------------------------------------|---------------|
-| `ES_HOST`                   | Elasticsearch host                                                       |               |
-| `ES_PORT`                   | Elasticsearch port                                                       |               |
-| `ES_USE_SSL`                | Use SSL to connect to Elasticsearch                                      | true          |
-| `ES_VERIFY_CERTS`           | Verify certificates for Elasticsearch                                    | true          |
-| `CURL_CA_BUNDLE`            | CA certificates for Elasticsearch                                        |               |
-| `STAC_COLLECTIONS_INDEX`    | Collection index in Elasticsearch                                        | collections   |
-| `STAC_ITEMS_INDEX_PREFIX`   | Prefix for Item indices in Elasticsearch                                 | items_        |
-| `OIDC_ISSUER`               | OIDC token issuer. When not provided, auth integration will be disabled. |               |
-| `ROLE_ADMIN`                | Role for admin users                                                     | stac-admin    |
-| `ROLE_EDITOR`               | Role for editors                                                         | stac-editor   |
-| `EDITOR_PUBLIC_COLLECTIONS` | Indicates whether editors can create public collections                  | false         |
+| Environment variable        | Description                                                              | Default value      |
+|-----------------------------|--------------------------------------------------------------------------|--------------------|
+| `ES_HOST`                   | Elasticsearch host                                                       |                    |
+| `ES_PORT`                   | Elasticsearch port                                                       |                    |
+| `ES_USE_SSL`                | Use SSL to connect to Elasticsearch                                      | true               |
+| `ES_VERIFY_CERTS`           | Verify certificates for Elasticsearch                                    | true               |
+| `CURL_CA_BUNDLE`            | CA certificates for Elasticsearch                                        |                    |
+| `STAC_COLLECTIONS_INDEX`    | Collection index in Elasticsearch                                        | collections        |
+| `STAC_ITEMS_INDEX_PREFIX`   | Prefix for Item indices in Elasticsearch                                 | items_             |
+| `OIDC_ISSUER`               | OIDC token issuer. When not provided, auth integration will be disabled. |                    |
+| `OIDC_ROLES_CLAIM`          | Token claim from which the user roles are read                           | realm_access.roles |
+| `ROLE_ADMIN`                | Role for admin users                                                     | stac-admin         |
+| `ROLE_EDITOR`               | Role for editors                                                         | stac-editor        |
+| `EDITOR_PUBLIC_COLLECTIONS` | Indicates whether editors can create public collections                  | false              |
 
 ## Dependencies
 
@@ -34,7 +35,8 @@ when creating new collections (item index).
 
 ## Authorization integration
 
-The application supports authorization via the use of OpenID Connect (OIDC) access tokens. The access token should be sent as a Bearer token in the `Authorization` header of a HTTP request. 
+The application supports authorization via the use of OpenID Connect (OIDC) access tokens. The access token should be
+sent as a Bearer token in the `Authorization` header of a HTTP request.
 The roles of a user are read from the `$.realm_access.roles` property in the access token. Users can be assigned to a
 role in the authorization server (eg. Keycloak).
 Specific permissions can be configured based on these roles.

@@ -50,6 +50,7 @@ class AggregationClientAuth(EsAsyncAggregationClient):
         centroid_geotile_grid_frequency_precision: Optional[int] = None,
         geometry_geohash_grid_frequency_precision: Optional[int] = None,
         geometry_geotile_grid_frequency_precision: Optional[int] = None,
+        datetime_frequency_interval: Optional[str] = None,
         **kwargs,
     ) -> Union[Dict, Exception]:
         request = kwargs["request"]
@@ -95,5 +96,6 @@ class AggregationClientAuth(EsAsyncAggregationClient):
             centroid_geotile_grid_frequency_precision,
             geometry_geohash_grid_frequency_precision,
             geometry_geotile_grid_frequency_precision,
+            datetime_frequency_interval,
             **kwargs,
         )

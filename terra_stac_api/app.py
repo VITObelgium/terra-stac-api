@@ -150,7 +150,9 @@ api = StacApi(
             allow_origins=app_settings.cors_allow_origins,
             allow_methods=app_settings.cors_allow_methods,
             allow_credentials=app_settings.cors_allow_credentials,
-            allow_headers=SAFELISTED_HEADERS,
+            allow_headers={"Authorization"} | SAFELISTED_HEADERS
+            if app_settings.cors_allow_credentials
+            else SAFELISTED_HEADERS,
         ),
         Middleware(ProxyHeaderMiddleware),
         Middleware(AuthenticationMiddleware, backend=auth, on_error=on_auth_error),

@@ -1,4 +1,4 @@
-ES=elasticsearch-7.5.1
+ES=elasticsearch-7.17.23
 ES_ARCHIVE=$ES-linux-x86_64.tar.gz
 ES_ARCHIVE_SHA512=$ES_ARCHIVE.sha512
 

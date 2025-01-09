@@ -17,8 +17,8 @@ su jenkins -c "
     cp -f ${WORKSPACE}/elasticsearch/elasticsearch.yml $ES/config/elasticsearch.yml
     # echo 'xpack.security.enabled: false' >> $ES/config/elasticsearch.yml
     
-    # modify startup script for v7.5.1 (no ps command in Docker container)
-    sed -i '58,60d' ./$ES/bin/elasticsearch
+    # modify startup script (no ps command in Docker container)
+    sed -i '96,98d' ./$ES/bin/elasticsearch
 
     ES_STARTUP_SLEEP_TIME=30 ./$ES/bin/elasticsearch -d
 "

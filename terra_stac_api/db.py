@@ -26,6 +26,10 @@ ES_COLLECTIONS_MAPPINGS["properties"]["renders"] = {
     "type": "object",
     "enabled": False,
 }
+ES_COLLECTIONS_MAPPINGS["properties"]["summaries"] = {
+    "type": "object",
+    "enabled": False,
+}
 
 
 async def fix_delete_item_index(collection_id: str):

@@ -32,30 +32,30 @@ ES_COLLECTIONS_MAPPINGS["properties"]["summaries"] = {
 }
 
 
-async def fix_delete_item_index(collection_id: str):
-    """Delete the index for items in a collection.
-
-    Args:
-        collection_id (str): The ID of the collection whose items index will be deleted.
-    """
-    client = AsyncOpensearchSettings().create_client
-
-    name = index_by_collection_id(collection_id)
-    index_info = await client.indices.get(index=name)
-    [index] = index_info.keys()
-    index_info = index_info[index]
-
-    if "aliases" in index_info and index_info["aliases"]:
-        [alias] = index_info["aliases"].keys()
-        await client.indices.delete_alias(index=index, name=alias)
-        await client.indices.delete(index=index)
-    else:
-        await client.indices.delete(index=index)
-    await client.close()
-
-
-# fix backwards compatibility for Elasticsearch versions without resolve functionality
-stac_fastapi.opensearch.database_logic.delete_item_index = fix_delete_item_index
+# async def fix_delete_item_index(collection_id: str):
+#     """Delete the index for items in a collection.
+#
+#     Args:
+#         collection_id (str): The ID of the collection whose items index will be deleted.
+#     """
+#     client = AsyncOpensearchSettings().create_client
+#
+#     name = index_by_collection_id(collection_id)
+#     index_info = await client.indices.get(index=name)
+#     [index] = index_info.keys()
+#     index_info = index_info[index]
+#
+#     if "aliases" in index_info and index_info["aliases"]:
+#         [alias] = index_info["aliases"].keys()
+#         await client.indices.delete_alias(index=index, name=alias)
+#         await client.indices.delete(index=index)
+#     else:
+#         await client.indices.delete(index=index)
+#     await client.close()
+#
+#
+# # fix backwards compatibility for Elasticsearch versions without resolve functionality
+# stac_fastapi.opensearch.database_logic.delete_item_index = fix_delete_item_index
 
 
 class DatabaseLogicAuth(DatabaseLogic):
@@ -90,8 +90,7 @@ class DatabaseLogicAuth(DatabaseLogic):
     async def _refresh(self):
         await self.client.indices.refresh()
 
-    async def aggregate(
-        self,
+    async def aggregate(self,
         collection_ids: Optional[List[str]],
         aggregations: List[str],
         search: Search,
@@ -100,8 +99,9 @@ class DatabaseLogicAuth(DatabaseLogic):
         centroid_geotile_grid_precision: int,
         geometry_geohash_grid_precision: int,
         geometry_geotile_grid_precision: int,
+        datetime_frequency_interval: str,
         ignore_unavailable: Optional[bool] = True,
-    ):
+        **kwargs):
         if collection_ids is None or len(collection_ids) == 0:
             raise DatabaseError()
         return await super().aggregate(
@@ -113,5 +113,6 @@ class DatabaseLogicAuth(DatabaseLogic):
             centroid_geotile_grid_precision,
             geometry_geohash_grid_precision,
             geometry_geotile_grid_precision,
-            ignore_unavailable,
+            datetime_frequency_interval,
+            ignore_unavailable
         )

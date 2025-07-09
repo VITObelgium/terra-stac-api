@@ -8,7 +8,7 @@ from stac_fastapi.api.app import StacApi
 from stac_fastapi.api.middleware import ProxyHeaderMiddleware
 from stac_fastapi.api.models import create_get_request_model, create_post_request_model
 from stac_fastapi.api.routes import Scope
-from stac_fastapi.core.core import EsAsyncBaseFiltersClient
+from stac_fastapi.sfeos_helpers.filter.client import EsAsyncBaseFiltersClient
 from stac_fastapi.core.extensions import QueryExtension
 from stac_fastapi.core.extensions.aggregation import (
     EsAggregationExtensionGetRequest,
@@ -80,7 +80,7 @@ search_extensions = [
         )
     ),
     FieldsExtension(),
-    FilterExtension(client=EsAsyncBaseFiltersClient()),
+    FilterExtension(client=EsAsyncBaseFiltersClient(database=database_logic)),
     QueryExtension(),
     SortExtension(),
     TokenPaginationExtension(),
@@ -126,7 +126,12 @@ api = StacApi(
             [
                 Scope(path="/collections/{collection_id}", method="PUT"),
                 Scope(
+                    path="/collections/{collection_id}", method="PATCH"
+                ),
+                Scope(
                     path="/collections/{collection_id}/items/{item_id}", method="PUT"
+                ),Scope(
+                    path="/collections/{collection_id}/items/{item_id}", method="PATCH"
                 ),
                 Scope(path="/collections/{collection_id}/items", method="POST"),
                 Scope(

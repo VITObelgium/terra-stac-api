@@ -1,11 +1,12 @@
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union, Any
 
 from fastapi import Path
 from overrides import overrides
 from stac_fastapi.core.extensions.aggregation import (
     EsAggregationExtensionPostRequest,
-    EsAsyncAggregationClient,
 )
+from stac_fastapi.sfeos_helpers.aggregation import EsAsyncBaseAggregationClient
+
 from stac_fastapi.types.rfc3339 import DateTimeType
 from stac_pydantic.shared import BBox
 from typing_extensions import Annotated
@@ -14,11 +15,12 @@ from terra_stac_api.core import AccessType, ensure_authorized_for_collection
 from terra_stac_api.db import DatabaseLogicAuth
 
 
-class AggregationClientAuth(EsAsyncAggregationClient):
+class AggregationClientAuth(EsAsyncBaseAggregationClient):
     database: DatabaseLogicAuth
 
     @overrides
-    async def get_aggregations(self, collection_id: Optional[str] = None, **kwargs):
+    async def get_aggregations(self, collection_id: Optional[str] = None, **kwargs)\
+            -> Dict[str, Any]:
         request = kwargs["request"]
         if collection_id is not None:
             await ensure_authorized_for_collection(
@@ -41,7 +43,7 @@ class AggregationClientAuth(EsAsyncAggregationClient):
         datetime: Optional[DateTimeType] = None,
         intersects: Optional[str] = None,
         filter_lang: Optional[str] = None,
-        filter: Optional[str] = None,
+        filter_expr: Optional[str] = None,
         aggregations: Optional[str] = None,
         ids: Optional[List[str]] = None,
         bbox: Optional[BBox] = None,
@@ -87,7 +89,7 @@ class AggregationClientAuth(EsAsyncAggregationClient):
             datetime,
             intersects,
             filter_lang,
-            filter,
+            filter_expr,
             aggregations,
             ids,
             bbox,

@@ -1,6 +1,9 @@
 import asyncio
+import dataclasses
 import json
 import logging
+import os
+import urllib
 from pathlib import Path
 
 import pytest
@@ -12,6 +15,7 @@ from stac_fastapi.opensearch.database_logic import ITEM_INDICES
 import terra_stac_api.auth
 
 from .mock_auth import MockAuthBackend
+from testcontainers.elasticsearch import ElasticSearchContainer
 
 terra_stac_api.auth.OIDC = MockAuthBackend
 
@@ -20,6 +24,24 @@ import terra_stac_api.app  # noqa
 RESOURCES = Path(__file__).parent / "resources"
 logger = logging.getLogger(__name__)
 
+ES_PORT = 9200
+ES_VERSION = "7.17.23"
+ES_MEM = "1G"
+ES_CONFIG_DST = "/usr/share/elasticsearch/config/elasticsearch.yml"
+
+@pytest.fixture(scope="session", autouse=True)
+def start_es_cluster():
+    class CustomElasticSearchContainer(ElasticSearchContainer):
+        def __init__(self, image, **kwargs) -> None:
+            super().__init__(image, **kwargs)
+            self.with_bind_ports(ES_PORT, ES_PORT)
+
+    with CustomElasticSearchContainer(f'elasticsearch:{ES_VERSION}',
+                                mem_limit=ES_MEM,
+                                volumes=[(str(RESOURCES / "elasticsearch.yml"), ES_CONFIG_DST,"rw")]
+    ) as es:
+        logger.info(f"Started ElasticSearch container on: {es.get_url()}")
+        yield
 
 @pytest.fixture(scope="session")
 def event_loop():
@@ -92,6 +114,9 @@ def extra_item():
         item = json.load(f)
     return item
 
+@pytest.fixture(scope="session")
+def patch():
+    return {"properties":{"title":"patched_title_123"}}
 
 @pytest_asyncio.fixture(autouse=True)
 async def setup_es(api, app, collections, items):

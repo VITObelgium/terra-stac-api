@@ -31,6 +31,7 @@ ES_CONFIG_DST = "/usr/share/elasticsearch/config/elasticsearch.yml"
 
 @pytest.fixture(scope="session", autouse=True)
 def start_es_cluster():
+    raise (os.geteuid(), os.getgid(), os.getlogin())
     class CustomElasticSearchContainer(ElasticSearchContainer):
         def __init__(self, image, **kwargs) -> None:
             super().__init__(image, **kwargs)

@@ -1,14 +1,10 @@
 import logging
 from typing import Any, Dict, Iterable, List, Optional, Union
-
-import stac_fastapi.opensearch.database_logic
 from opensearchpy import Search, exceptions
-from stac_fastapi.opensearch.config import AsyncOpensearchSettings
 from stac_fastapi.opensearch.database_logic import (
     COLLECTIONS_INDEX,
     ES_COLLECTIONS_MAPPINGS,
     DatabaseLogic,
-    index_by_collection_id,
 )
 from stac_fastapi.types.errors import DatabaseError, NotFoundError
 from stac_fastapi.types.stac import Collection
@@ -30,33 +26,6 @@ ES_COLLECTIONS_MAPPINGS["properties"]["summaries"] = {
     "type": "object",
     "enabled": False,
 }
-
-
-# async def fix_delete_item_index(collection_id: str):
-#     """Delete the index for items in a collection.
-#
-#     Args:
-#         collection_id (str): The ID of the collection whose items index will be deleted.
-#     """
-#     client = AsyncOpensearchSettings().create_client
-#
-#     name = index_by_collection_id(collection_id)
-#     index_info = await client.indices.get(index=name)
-#     [index] = index_info.keys()
-#     index_info = index_info[index]
-#
-#     if "aliases" in index_info and index_info["aliases"]:
-#         [alias] = index_info["aliases"].keys()
-#         await client.indices.delete_alias(index=index, name=alias)
-#         await client.indices.delete(index=index)
-#     else:
-#         await client.indices.delete(index=index)
-#     await client.close()
-#
-#
-# # fix backwards compatibility for Elasticsearch versions without resolve functionality
-# stac_fastapi.opensearch.database_logic.delete_item_index = fix_delete_item_index
-
 
 class DatabaseLogicAuth(DatabaseLogic):
     async def get_all_authorized_collections(

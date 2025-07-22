@@ -11,5 +11,5 @@ pythonPipeline {
   docker_deploy         = true
   docker_registry_prod  = 'vito-docker.artifactory.vgt.vito.be'
   extras_require        = 'dev'
-  pre_test_script       = 'pre_test.sh'
+//   pre_test_script       = 'pre_test.sh'
 }

@@ -30,7 +30,6 @@ from terra_stac_api.errors import ForbiddenError, UnauthorizedError
 _auth = "_auth"
 settings = Settings()
 
-
 class AccessType(str, Enum):
     READ = "read"
     WRITE = "write"
@@ -260,15 +259,8 @@ class TransactionsClientAuth(TransactionsClient):
             collection_id,
             AccessType.WRITE,
         )
-        # re-implement because super method doesn't pass request to delete operation
-        item = item.model_dump(mode="json")
-        base_url = str(request.base_url)
-        now = datetime_type.now(timezone.utc).isoformat().replace("+00:00", "Z")
-        item["properties"]["updated"] = now
-        await self.database.check_collection_exists(collection_id)
-        await self.delete_item(item_id=item_id, collection_id=collection_id, **kwargs)
-        await self.create_item(collection_id=collection_id, item=Item(**item), **kwargs)
-        return ItemSerializer.db_to_stac(item, base_url)
+        item = await super().update_item(collection_id, item_id, item, **kwargs)
+        return item
 
     @overrides
     async def patch_item(

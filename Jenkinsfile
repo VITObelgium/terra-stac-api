@@ -12,7 +12,7 @@ pythonPipeline {
   docker_registry_prod  = 'vito-docker.artifactory.vgt.vito.be'
   extras_require        = 'dev'
   extra_container_volumes = [
-    '/var/run/docker.sock:/var/run/docker.sock:ro'
+    '/var/run/docker.sock:/var/run/docker.sock'
   ]
 //   pre_test_script       = 'pre_test.sh'
 }

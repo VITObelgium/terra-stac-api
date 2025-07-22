@@ -21,6 +21,7 @@ dev = [
     "pre-commit",
     "ruff",
     "testcontainers==4.11.0",
+    "docker==7.1.0"
 ]
 
 [tool.setuptools.packages.find]

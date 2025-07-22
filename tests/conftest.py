@@ -3,7 +3,7 @@ import dataclasses
 import json
 import logging
 import os
-raise (os.geteuid(), os.getgid())
+raise Exception(os.geteuid(), os.getgid())
 import urllib
 from pathlib import Path
 

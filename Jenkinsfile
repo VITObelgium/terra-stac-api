@@ -14,5 +14,5 @@ pythonPipeline {
   extra_container_volumes = [
     '/var/run/docker.sock:/var/run/docker.sock'
   ]
-//   pre_test_script       = 'pre_test.sh'
+  pre_test_script       = 'pre_test.sh'
 }

@@ -36,12 +36,13 @@ def start_es_cluster():
             super().__init__(image, **kwargs)
             self.with_bind_ports(ES_PORT, ES_PORT)
 
-    with CustomElasticSearchContainer(f'elasticsearch:{ES_VERSION}',
-                                mem_limit=ES_MEM,
-                                volumes=[(str(RESOURCES / "elasticsearch.yml"), ES_CONFIG_DST,"rw")]
-    ) as es:
-        logger.info(f"Started ElasticSearch container on: {es.get_url()}")
-        yield
+    if not os.environ.get("TEST_IN_JENKINS", False):
+        with CustomElasticSearchContainer(f'elasticsearch:{ES_VERSION}',
+                                    mem_limit=ES_MEM,
+                                    volumes=[(str(RESOURCES / "elasticsearch.yml"), ES_CONFIG_DST,"rw")]
+        ) as es:
+            logger.info(f"Started ElasticSearch container on: {es.get_url()}")
+            yield
 
 @pytest.fixture(scope="session")
 def event_loop():

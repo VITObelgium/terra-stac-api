@@ -43,6 +43,8 @@ def start_es_cluster():
         ) as es:
             logger.info(f"Started ElasticSearch container on: {es.get_url()}")
             yield
+    else:
+        yield
 
 @pytest.fixture(scope="session")
 def event_loop():

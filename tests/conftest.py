@@ -15,7 +15,6 @@ from stac_fastapi.opensearch.database_logic import ITEM_INDICES
 import terra_stac_api.auth
 
 from .mock_auth import MockAuthBackend
-from testcontainers.elasticsearch import ElasticSearchContainer
 
 terra_stac_api.auth.OIDC = MockAuthBackend
 
@@ -31,12 +30,13 @@ ES_CONFIG_DST = "/usr/share/elasticsearch/config/elasticsearch.yml"
 
 @pytest.fixture(scope="session", autouse=True)
 def start_es_cluster():
-    class CustomElasticSearchContainer(ElasticSearchContainer):
-        def __init__(self, image, **kwargs) -> None:
-            super().__init__(image, **kwargs)
-            self.with_bind_ports(ES_PORT, ES_PORT)
-
     if not os.environ.get("TEST_IN_JENKINS", False):
+        from testcontainers.elasticsearch import ElasticSearchContainer
+
+        class CustomElasticSearchContainer(ElasticSearchContainer):
+            def __init__(self, image, **kwargs) -> None:
+                super().__init__(image, **kwargs)
+                self.with_bind_ports(ES_PORT, ES_PORT)
         with CustomElasticSearchContainer(f'elasticsearch:{ES_VERSION}',
                                     mem_limit=ES_MEM,
                                     volumes=[(str(RESOURCES / "elasticsearch.yml"), ES_CONFIG_DST,"rw")]

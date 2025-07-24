@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, Union, Any
+from typing import Any, Dict, List, Optional, Union
 
 from fastapi import Path
 from overrides import overrides
@@ -6,7 +6,6 @@ from stac_fastapi.core.extensions.aggregation import (
     EsAggregationExtensionPostRequest,
 )
 from stac_fastapi.sfeos_helpers.aggregation import EsAsyncBaseAggregationClient
-
 from stac_fastapi.types.rfc3339 import DateTimeType
 from stac_pydantic.shared import BBox
 from typing_extensions import Annotated
@@ -19,8 +18,9 @@ class AggregationClientAuth(EsAsyncBaseAggregationClient):
     database: DatabaseLogicAuth
 
     @overrides
-    async def get_aggregations(self, collection_id: Optional[str] = None, **kwargs)\
-            -> Dict[str, Any]:
+    async def get_aggregations(
+        self, collection_id: Optional[str] = None, **kwargs
+    ) -> Dict[str, Any]:
         request = kwargs["request"]
         if collection_id is not None:
             await ensure_authorized_for_collection(

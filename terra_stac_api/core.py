@@ -1,5 +1,3 @@
-from datetime import datetime as datetime_type
-from datetime import timezone
 from enum import Enum
 from typing import List, Optional, Union
 from urllib.parse import urljoin
@@ -12,8 +10,11 @@ from stac_fastapi.core.core import (
     CoreClient,
     TransactionsClient,
 )
-from stac_fastapi.core.serializers import ItemSerializer
-from stac_fastapi.extensions.core.transaction.request import PartialItem, PatchOperation, PartialCollection
+from stac_fastapi.extensions.core.transaction.request import (
+    PartialCollection,
+    PartialItem,
+    PatchOperation,
+)
 from stac_fastapi.extensions.third_party.bulk_transactions import Items
 from stac_fastapi.types import stac as stac_types
 from stac_fastapi.types.search import BaseSearchPostRequest
@@ -29,6 +30,7 @@ from terra_stac_api.errors import ForbiddenError, UnauthorizedError
 
 _auth = "_auth"
 settings = Settings()
+
 
 class AccessType(str, Enum):
     READ = "read"
@@ -264,11 +266,11 @@ class TransactionsClientAuth(TransactionsClient):
 
     @overrides
     async def patch_item(
-            self,
-            collection_id: str,
-            item_id: str,
-            patch: Union[PartialItem, List[PatchOperation]],
-            **kwargs,
+        self,
+        collection_id: str,
+        item_id: str,
+        patch: Union[PartialItem, List[PatchOperation]],
+        **kwargs,
     ):
         request = kwargs["request"]
         await ensure_authorized_for_collection(
@@ -282,9 +284,7 @@ class TransactionsClientAuth(TransactionsClient):
         return item
 
     @overrides
-    async def delete_item(
-        self, item_id: str, collection_id: str, **kwargs
-    ) -> None:
+    async def delete_item(self, item_id: str, collection_id: str, **kwargs) -> None:
         request = kwargs["request"]
         await ensure_authorized_for_collection(
             self.database,
@@ -325,10 +325,10 @@ class TransactionsClientAuth(TransactionsClient):
 
     @overrides
     async def patch_collection(
-            self,
-            collection_id: str,
-            patch: Union[PartialCollection, List[PatchOperation]],
-            **kwargs,
+        self,
+        collection_id: str,
+        patch: Union[PartialCollection, List[PatchOperation]],
+        **kwargs,
     ):
         request = kwargs["request"]
         await ensure_authorized_for_collection(
@@ -342,9 +342,7 @@ class TransactionsClientAuth(TransactionsClient):
         return await super().patch_collection(collection_id, patch, **kwargs)
 
     @overrides
-    async def delete_collection(
-        self, collection_id: str, **kwargs
-    ) -> None:
+    async def delete_collection(self, collection_id: str, **kwargs) -> None:
         request = kwargs["request"]
         await ensure_authorized_for_collection(
             self.database,

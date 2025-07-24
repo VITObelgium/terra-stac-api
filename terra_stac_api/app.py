@@ -8,7 +8,6 @@ from stac_fastapi.api.app import StacApi
 from stac_fastapi.api.middleware import ProxyHeaderMiddleware
 from stac_fastapi.api.models import create_get_request_model, create_post_request_model
 from stac_fastapi.api.routes import Scope
-from stac_fastapi.sfeos_helpers.filter.client import EsAsyncBaseFiltersClient
 from stac_fastapi.core.extensions import QueryExtension
 from stac_fastapi.core.extensions.aggregation import (
     EsAggregationExtensionGetRequest,
@@ -29,6 +28,7 @@ from stac_fastapi.opensearch.database_logic import (
     create_collection_index,
     create_index_templates,
 )
+from stac_fastapi.sfeos_helpers.filter.client import EsAsyncBaseFiltersClient
 from starlette.middleware import Middleware
 from starlette.middleware.authentication import AuthenticationMiddleware
 from starlette.middleware.cors import SAFELISTED_HEADERS, CORSMiddleware
@@ -125,12 +125,11 @@ api = StacApi(
         (
             [
                 Scope(path="/collections/{collection_id}", method="PUT"),
-                Scope(
-                    path="/collections/{collection_id}", method="PATCH"
-                ),
+                Scope(path="/collections/{collection_id}", method="PATCH"),
                 Scope(
                     path="/collections/{collection_id}/items/{item_id}", method="PUT"
-                ),Scope(
+                ),
+                Scope(
                     path="/collections/{collection_id}/items/{item_id}", method="PATCH"
                 ),
                 Scope(path="/collections/{collection_id}/items", method="POST"),

@@ -1,5 +1,6 @@
 import logging
 from typing import Any, Dict, Iterable, List, Optional, Union
+
 from opensearchpy import Search, exceptions
 from stac_fastapi.opensearch.database_logic import (
     COLLECTIONS_INDEX,
@@ -26,6 +27,7 @@ ES_COLLECTIONS_MAPPINGS["properties"]["summaries"] = {
     "type": "object",
     "enabled": False,
 }
+
 
 class DatabaseLogicAuth(DatabaseLogic):
     async def get_all_authorized_collections(
@@ -59,7 +61,8 @@ class DatabaseLogicAuth(DatabaseLogic):
     async def _refresh(self):
         await self.client.indices.refresh()
 
-    async def aggregate(self,
+    async def aggregate(
+        self,
         collection_ids: Optional[List[str]],
         aggregations: List[str],
         search: Search,
@@ -70,7 +73,8 @@ class DatabaseLogicAuth(DatabaseLogic):
         geometry_geotile_grid_precision: int,
         datetime_frequency_interval: str,
         ignore_unavailable: Optional[bool] = True,
-        **kwargs):
+        **kwargs,
+    ):
         if collection_ids is None or len(collection_ids) == 0:
             raise DatabaseError()
         return await super().aggregate(
@@ -83,5 +87,5 @@ class DatabaseLogicAuth(DatabaseLogic):
             geometry_geohash_grid_precision,
             geometry_geotile_grid_precision,
             datetime_frequency_interval,
-            ignore_unavailable
+            ignore_unavailable,
         )

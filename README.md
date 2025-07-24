@@ -8,7 +8,7 @@ The application can be configured via environment variables. Here is an overview
 
 | Environment variable        | Description                                                              | Default value      |
 |-----------------------------|--------------------------------------------------------------------------|--------------------|
-| `ES_HOST`                   | Elasticsearch host                                                       |                    |
+| `ES_HOST`                   | Elasticsearch hosts (multiple must be comma-separated)                   |                    |
 | `ES_PORT`                   | Elasticsearch port                                                       |                    |
 | `ES_USE_SSL`                | Use SSL to connect to Elasticsearch                                      | true               |
 | `ES_VERIFY_CERTS`           | Verify certificates for Elasticsearch                                    | true               |
@@ -20,6 +20,9 @@ The application can be configured via environment variables. Here is an overview
 | `ROLE_ADMIN`                | Role for admin users                                                     | stac-admin         |
 | `ROLE_EDITOR`               | Role for editors                                                         | stac-editor        |
 | `EDITOR_PUBLIC_COLLECTIONS` | Indicates whether editors can create public collections                  | false              |
+| `RAISE_ON_BULK_ERROR`       | Controls whether bulk insert operations raise exceptions on errors.      | false              |
+| `ES_HTTP_COMPRESS`          | Option to enable HTTP compression.                                       | true               |
+
 
 ## Dependencies
 

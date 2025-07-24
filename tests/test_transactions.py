@@ -2,7 +2,6 @@ from copy import deepcopy
 
 from httpx import codes
 
-from .conftest import patch
 from .constants import (
     COLLECTION_PROTECTED,
     COLLECTION_S2_TOC_V2,
@@ -157,17 +156,16 @@ async def test_update_item_authorized(client, items):
 
 async def test_patch_item(client, items, patch):
     item = next(iter(items[COLLECTION_S2_TOC_V2]))
-    item_endpoint = str(ENDPOINT_COLLECTIONS / item["collection"] / "items" / item["id"])
+    item_endpoint = str(
+        ENDPOINT_COLLECTIONS / item["collection"] / "items" / item["id"]
+    )
     # Check title is different from patch
     response = await client.get(item_endpoint)
     old_title = response.json()["properties"]["title"]
     assert old_title != patch["properties"]["title"]
 
     # Check patch was UNAUTHORIZED
-    response = await client.patch(
-        item_endpoint,
-        json=patch
-    )
+    response = await client.patch(item_endpoint, json=patch)
     assert response.status_code == codes.UNAUTHORIZED
 
     # Check aftermath: no updated title.
@@ -177,7 +175,9 @@ async def test_patch_item(client, items, patch):
 
 async def test_patch_item_unauthorized(client, items, patch):
     item = next(iter(items[COLLECTION_S2_TOC_V2]))
-    item_endpoint = str(ENDPOINT_COLLECTIONS / item["collection"] / "items" / item["id"])
+    item_endpoint = str(
+        ENDPOINT_COLLECTIONS / item["collection"] / "items" / item["id"]
+    )
     # Check title is different from patch
     response = await client.get(item_endpoint)
     old_title = response.json()["properties"]["title"]
@@ -198,7 +198,9 @@ async def test_patch_item_unauthorized(client, items, patch):
 
 async def test_patch_item_authorized(client, items, patch):
     item = next(iter(items[COLLECTION_S2_TOC_V2]))
-    item_endpoint = str(ENDPOINT_COLLECTIONS / item["collection"] / "items" / item["id"])
+    item_endpoint = str(
+        ENDPOINT_COLLECTIONS / item["collection"] / "items" / item["id"]
+    )
     # Check title is different from patch
     response = await client.get(item_endpoint)
     assert response.json()["properties"]["title"] != patch["properties"]["title"]
@@ -214,6 +216,7 @@ async def test_patch_item_authorized(client, items, patch):
     # Check aftermath: updated title.
     response = await client.get(item_endpoint)
     assert response.json()["properties"]["title"] == patch["properties"]["title"]
+
 
 async def test_delete_item(client, items):
     item = next(iter(items[COLLECTION_S2_TOC_V2]))

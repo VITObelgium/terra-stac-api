@@ -19,14 +19,15 @@ unprotected_routes = {
     "/queryables": ["GET"],
     "/collections/{collection_id}/queryables": ["GET"],
     "/_mgmt/ping": ["GET"],
+    "/_mgmt/health": ["GET"]
 }
 
 # CRUD endpoints
 crud_routes = {
     "/collections/{collection_id}/items": ["POST"],
-    "/collections/{collection_id}/items/{item_id}": ["PUT", "DELETE"],
+    "/collections/{collection_id}/items/{item_id}": ["PUT", "DELETE", "PATCH"],
     "/collections": ["POST"],
-    "/collections/{collection_id}": ["PUT", "DELETE"],
+    "/collections/{collection_id}": ["PUT", "DELETE", "PATCH"],
     "/collections/{collection_id}/bulk_items": ["POST"],
 }
 
@@ -38,6 +39,8 @@ async def test_route_status(client, api):
     """
     for route in api.app.routes:
         for method in route.methods:
+            if method == "PATCH":
+                pass
             url = route.path.format_map(
                 dict(collection_id="test-collection", item_id="test-item")
             )

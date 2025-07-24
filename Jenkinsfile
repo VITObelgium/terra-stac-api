@@ -12,4 +12,7 @@ pythonPipeline {
   docker_registry_prod  = 'vito-docker.artifactory.vgt.vito.be'
   extras_require        = 'dev'
   pre_test_script       = 'pre_test.sh'
+  extra_env_variables = [
+        "TEST_IN_JENKINS=True"
+  ]
 }

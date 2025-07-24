@@ -14,7 +14,7 @@ su jenkins -c "
     tar -xzf $ES_ARCHIVE
 
     # disable security
-    cp -f ${WORKSPACE}/elasticsearch/elasticsearch.yml $ES/config/elasticsearch.yml
+    cp -f ${WORKSPACE}/tests/resources/elasticsearch.yml $ES/config/elasticsearch.yml
     # echo 'xpack.security.enabled: false' >> $ES/config/elasticsearch.yml
     
     # modify startup script (no ps command in Docker container)

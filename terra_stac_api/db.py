@@ -1,11 +1,13 @@
 import asyncio
 import logging
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Type, Union
 
+import attr
 import orjson
 from fastapi import HTTPException
 from opensearchpy import Search
 from overrides import overrides
+from stac_fastapi.core.serializers import CollectionSerializer
 from stac_fastapi.opensearch.database_logic import (
     COLLECTIONS_INDEX,
     ES_COLLECTIONS_MAPPINGS,
@@ -16,6 +18,7 @@ from stac_fastapi.types.errors import DatabaseError
 from starlette.requests import Request
 
 from terra_stac_api.config import Settings
+from terra_stac_api.serializer import CustomCollectionSerializer
 
 settings = Settings()
 logger = logging.getLogger(__name__)
@@ -35,6 +38,10 @@ ES_COLLECTIONS_MAPPINGS["properties"]["summaries"] = {
 
 
 class DatabaseLogicAuth(DatabaseLogic):
+    collection_serializer: Type[CollectionSerializer] = attr.ib(
+        default=CustomCollectionSerializer
+    )
+
     async def get_all_authorized_collections(
         self,
         authorizations: List[str],

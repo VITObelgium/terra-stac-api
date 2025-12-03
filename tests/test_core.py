@@ -30,7 +30,7 @@ async def test_landing_page(client, collections):
         for link in response.json()["links"]
         if link["rel"] == "child"
     }
-    check_collections((ROLE_ANONYMOUS,), response_collections, collections.values())
+    assert len(response_collections) == 0
 
 
 async def test_landing_page_authenticated(client, collections):
@@ -41,9 +41,7 @@ async def test_landing_page_authenticated(client, collections):
         for link in response.json()["links"]
         if link["rel"] == "child"
     }
-    check_collections(
-        (ROLE_ANONYMOUS, ROLE_PROTECTED), response_collections, collections.values()
-    )
+    assert len(response_collections) == 0
 
 
 async def test_collections(client, collections):

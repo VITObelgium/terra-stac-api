@@ -3,6 +3,7 @@ from typing import List, Optional, Union
 
 import attr
 from fastapi import HTTPException, Request
+from opensearchpy import exceptions
 from overrides import overrides
 from stac_fastapi.core.core import (
     BulkTransactionsClient,
@@ -18,6 +19,7 @@ from stac_fastapi.extensions.third_party.bulk_transactions import Items
 from stac_fastapi.types import stac as stac_types
 from stac_fastapi.types.search import BaseSearchPostRequest
 from stac_pydantic import Collection, Item, ItemCollection
+from stac_pydantic.shared import BBox
 from starlette import status
 from starlette.authentication import BaseUser
 
@@ -101,6 +103,42 @@ class CoreClientAuth(CoreClient):
             collection_id=collection_id, request=request
         )  # getting the collection makes sure the permissions are enforced
         return await super().get_item(item_id, collection_id, **kwargs)
+
+    @overrides
+    async def item_collection(
+        self,
+        collection_id: str,
+        request: Request,
+        bbox: Optional[BBox] = None,
+        datetime: Optional[str] = None,
+        limit: Optional[int] = None,
+        sortby: Optional[str] = None,
+        filter_expr: Optional[str] = None,
+        filter_lang: Optional[str] = None,
+        token: Optional[str] = None,
+        query: Optional[str] = None,
+        fields: Optional[List[str]] = None,
+        **kwargs,
+    ) -> stac_types.ItemCollection:
+        try:
+            await self.get_collection(collection_id=collection_id, request=request)
+        except exceptions.NotFoundError:
+            raise HTTPException(status_code=404, detail="Collection not found")
+
+        # Delegate directly to GET search for consistency
+        return await self.get_search(
+            request=request,
+            collections=[collection_id],
+            bbox=bbox,
+            datetime=datetime,
+            limit=limit,
+            token=token,
+            sortby=sortby,
+            query=query,
+            filter_expr=filter_expr,
+            filter_lang=filter_lang,
+            fields=fields,
+        )
 
     @overrides
     async def post_search(

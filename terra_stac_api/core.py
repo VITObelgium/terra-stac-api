@@ -1,9 +1,9 @@
 from enum import Enum
 from typing import List, Optional, Union
-from urllib.parse import urljoin
 
 import attr
 from fastapi import HTTPException, Request
+from opensearchpy import exceptions
 from overrides import overrides
 from stac_fastapi.core.core import (
     BulkTransactionsClient,
@@ -19,8 +19,7 @@ from stac_fastapi.extensions.third_party.bulk_transactions import Items
 from stac_fastapi.types import stac as stac_types
 from stac_fastapi.types.search import BaseSearchPostRequest
 from stac_pydantic import Collection, Item, ItemCollection
-from stac_pydantic.links import Relations
-from stac_pydantic.shared import MimeTypes
+from stac_pydantic.shared import BBox
 from starlette import status
 from starlette.authentication import BaseUser
 
@@ -67,24 +66,6 @@ async def ensure_authorized_for_collection(
     return collection
 
 
-def sync_ensure_authorized_for_collection(
-    db: DatabaseLogicAuth,
-    user: BaseUser,
-    scopes: List[str],
-    collection_id: str,
-    access_type: AccessType,
-) -> Collection:
-    collection = db.sync_find_collection(collection_id=collection_id)
-    if not is_authorized_for_collection(scopes, collection, access_type):
-        if user.is_authenticated:
-            raise ForbiddenError(
-                f"Insufficient permissions for collection {collection_id}"
-            )
-        else:
-            raise UnauthorizedError("Unauthorized, please authenticate")
-    return collection
-
-
 def is_admin(scopes: List[str]) -> bool:
     return settings.role_admin in scopes
 
@@ -93,37 +74,6 @@ def is_admin(scopes: List[str]) -> bool:
 class CoreClientAuth(CoreClient):
     database: DatabaseLogicAuth
     landing_page_id = attr.ib(default=settings.stac_id)
-
-    @overrides
-    async def all_collections(self, **kwargs) -> stac_types.Collections:
-        # TODO: implement paging
-        request: Request = kwargs["request"]
-        base_url = str(request.base_url)
-        return stac_types.Collections(
-            collections=[
-                self.collection_serializer.db_to_stac(c, request=request)
-                for c in await self.database.get_all_authorized_collections(
-                    request.auth.scopes
-                )
-            ],
-            links=[
-                {
-                    "rel": Relations.root.value,
-                    "type": MimeTypes.json,
-                    "href": base_url,
-                },
-                {
-                    "rel": Relations.parent.value,
-                    "type": MimeTypes.json,
-                    "href": base_url,
-                },
-                {
-                    "rel": Relations.self.value,
-                    "type": MimeTypes.json,
-                    "href": urljoin(base_url, "collections"),
-                },
-            ],
-        )
 
     @overrides
     async def get_collection(
@@ -153,6 +103,42 @@ class CoreClientAuth(CoreClient):
             collection_id=collection_id, request=request
         )  # getting the collection makes sure the permissions are enforced
         return await super().get_item(item_id, collection_id, **kwargs)
+
+    @overrides
+    async def item_collection(
+        self,
+        collection_id: str,
+        request: Request,
+        bbox: Optional[BBox] = None,
+        datetime: Optional[str] = None,
+        limit: Optional[int] = None,
+        sortby: Optional[str] = None,
+        filter_expr: Optional[str] = None,
+        filter_lang: Optional[str] = None,
+        token: Optional[str] = None,
+        query: Optional[str] = None,
+        fields: Optional[List[str]] = None,
+        **kwargs,
+    ) -> stac_types.ItemCollection:
+        try:
+            await self.get_collection(collection_id=collection_id, request=request)
+        except exceptions.NotFoundError:
+            raise HTTPException(status_code=404, detail="Collection not found")
+
+        # Delegate directly to GET search for consistency
+        return await self.get_search(
+            request=request,
+            collections=[collection_id],
+            bbox=bbox,
+            datetime=datetime,
+            limit=limit,
+            token=token,
+            sortby=sortby,
+            query=query,
+            filter_expr=filter_expr,
+            filter_lang=filter_lang,
+            fields=fields,
+        )
 
     @overrides
     async def post_search(
@@ -363,7 +349,7 @@ class BulkTransactionsClientAuth(BulkTransactionsClient):
     ) -> str:
         request: Request = kwargs["request"]
         collection_id = request.path_params.get("collection_id")
-        sync_ensure_authorized_for_collection(
+        await ensure_authorized_for_collection(
             self.database,
             request.user,
             request.auth.scopes,

@@ -1,14 +1,14 @@
 [project]
 name = "terra-stac-api"
-version = "1.1.0"
+version = "1.2.0"
 description = "Terrascope STAC API"
 authors = [{name = "Stijn Caerts", email = "stijn.caerts@vito.be"}]
 dependencies = [
-    "stac-fastapi.opensearch==6.1.0",
-    "python-jose==3.3.0",
+    "stac-fastapi.opensearch[redis]==6.7.6",
+    "python-jose==3.5.0",
     "asgi-logger==0.1.0",
-    "PyYAML==6.0.1",
-    "jsonpath_ng==1.6.1",
+    "PyYAML==6.0.3",
+    "jsonpath_ng==1.7.0",
 ]
 
 [project.optional-dependencies]

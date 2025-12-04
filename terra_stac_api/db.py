@@ -37,6 +37,7 @@ ES_COLLECTIONS_MAPPINGS["properties"]["summaries"] = {
 }
 
 
+@attr.s
 class DatabaseLogicAuth(DatabaseLogic):
     collection_serializer: Type[CollectionSerializer] = attr.ib(
         default=CustomCollectionSerializer

@@ -1,5 +1,5 @@
 # Changelog
-## [1.2.0] - Unreleased
+## [1.2.0] - 2025-12-09
 
 ### 🚀 Features
 

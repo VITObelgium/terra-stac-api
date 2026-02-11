@@ -1,3 +1,5 @@
+import json
+
 from httpx import codes
 
 from terra_stac_api.core import AccessType, _auth
@@ -183,3 +185,35 @@ async def test_search_admin(client, items):
     for collection, collection_items in items.items():
         for item in collection_items:
             assert item["id"] in response_item_ids
+
+
+async def test_filter_items_collections_cql2_text(client):
+    item_endpoint = str(ENDPOINT_COLLECTIONS / COLLECTION_S2_TOC_V2 / "items")
+
+    response = await client.get(item_endpoint + f"?filter=id='UNKNOWN_ID'")
+    assert len(response.json().get("features", [])) == 0
+
+    response = await client.get(item_endpoint)
+    assert len(response.json().get("features", [])) > 1
+
+    for item in response.json().get("features", []):
+        response = await client.get(item_endpoint + f"?filter=id='{item['id']}'")
+        assert len(response.json().get("features", [])) == 1
+        assert response.json().get("features", [])[0]["id"] == item["id"]
+
+
+async def test_filter_items_collections_collections_cql2_json(client):
+    item_endpoint = str(ENDPOINT_COLLECTIONS / COLLECTION_S2_TOC_V2 / "items")
+    def filter_param(id):
+        return [("filter", json.dumps({"op": "=", "args": [{"property": "id"}, id]})), ("filter-lang", "cql2-json")]
+
+    response = await client.get(item_endpoint,params=filter_param("UNKNOWN_ID"))
+    assert len(response.json().get("features", [])) == 0
+
+    response = await client.get(item_endpoint)
+    assert len(response.json().get("features", [])) > 1
+
+    for item in response.json().get("features", []):
+        response = await client.get(item_endpoint, params=filter_param(item["id"]))
+        assert len(response.json().get("features", [])) == 1
+        assert response.json().get("features", [])[0]["id"] == item["id"]

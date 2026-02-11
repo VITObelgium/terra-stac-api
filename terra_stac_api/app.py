@@ -23,6 +23,7 @@ from stac_fastapi.extensions.core import (
     TransactionExtension,
 )
 from stac_fastapi.extensions.third_party import BulkTransactionExtension
+from stac_fastapi.opensearch.app import items_get_request_model
 from stac_fastapi.opensearch.config import OpensearchSettings
 from stac_fastapi.opensearch.database_logic import (
     create_collection_index,
@@ -111,6 +112,7 @@ api = StacApi(
     ),
     search_get_request_model=get_request_model,
     search_post_request_model=post_request_model,
+    items_get_request_model=items_get_request_model,
     route_dependencies=[
         (
             [Scope(path="/collections", method="POST")],

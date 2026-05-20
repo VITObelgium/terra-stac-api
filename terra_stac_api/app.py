@@ -164,7 +164,7 @@ api = StacApi(
         Middleware(AuthenticationMiddleware, backend=auth, on_error=on_auth_error),
         Middleware(
             AccessLoggerMiddleware,
-            format='%(t)s %(client_addr)s "%(request_line)s" %(s)s %(B)s %(M)s',
+            format='%(t)s %(client_addr)s "%(request_line)s" %(s)s %(B)s %(M)s "%(UserAgent)s"',
             logger=logging.getLogger("terra_stac_api.access"),
         ),
     ],

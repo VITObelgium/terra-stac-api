@@ -19,7 +19,7 @@ class AggregationClientAuth(EsAsyncBaseAggregationClient):
 
     @overrides
     async def get_aggregations(
-        self, collection_id: Optional[str] = None, **kwargs
+        self, collection_id: str | None = None, **kwargs
     ) -> Dict[str, Any]:
         request = kwargs["request"]
         if collection_id is not None:
@@ -35,36 +35,28 @@ class AggregationClientAuth(EsAsyncBaseAggregationClient):
     @overrides
     async def aggregate(
         self,
-        aggregate_request: Optional[EsAggregationExtensionPostRequest] = None,
-        collection_id: Optional[
-            Annotated[str, Path(description="Collection ID")]
-        ] = None,
-        collections: Optional[List[str]] = [],
-        datetime: Optional[DateTimeType] = None,
-        intersects: Optional[str] = None,
-        filter_lang: Optional[str] = None,
-        filter_expr: Optional[str] = None,
-        aggregations: Optional[str] = None,
-        ids: Optional[List[str]] = None,
-        bbox: Optional[BBox] = None,
-        centroid_geohash_grid_frequency_precision: Optional[int] = None,
-        centroid_geohex_grid_frequency_precision: Optional[int] = None,
-        centroid_geotile_grid_frequency_precision: Optional[int] = None,
-        geometry_geohash_grid_frequency_precision: Optional[int] = None,
-        geometry_geotile_grid_frequency_precision: Optional[int] = None,
-        datetime_frequency_interval: Optional[str] = None,
+        aggregate_request: EsAggregationExtensionPostRequest | None = None,
+        collection_id: Annotated[str, Path(description="Collection ID")] | None = None,
+        collections: list[str] | None = [],
+        datetime: DateTimeType | None = None,
+        intersects: str | None = None,
+        filter_lang: str | None = None,
+        filter_expr: str | None = None,
+        aggregations: str | None = None,
+        ids: list[str] | None = None,
+        bbox: BBox | None = None,
+        centroid_geohash_grid_frequency_precision: int | None = None,
+        centroid_geohex_grid_frequency_precision: int | None = None,
+        centroid_geotile_grid_frequency_precision: int | None = None,
+        geometry_geohash_grid_frequency_precision: int | None = None,
+        geometry_geotile_grid_frequency_precision: int | None = None,
+        datetime_frequency_interval: str | None = None,
         **kwargs,
-    ) -> Union[Dict, Exception]:
-        request = kwargs["request"]
+    ) -> dict | Exception:
+        request: Request = kwargs["request"]
         if collection_id is not None:
-            await ensure_authorized_for_collection(
-                self.database,
-                request.user,
-                request.auth.scopes,
-                collection_id,
-                AccessType.READ,
-            )
-        elif collections is not None:
+            collections = [str(collection_id)]
+        if collections is not None:
             for c in collections:
                 await ensure_authorized_for_collection(
                     self.database,

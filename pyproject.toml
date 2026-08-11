@@ -4,7 +4,7 @@ version = "1.2.2"
 description = "Terrascope STAC API"
 authors = [{name = "Stijn Caerts", email = "stijn.caerts@vito.be"}]
 dependencies = [
-    "stac-fastapi-opensearch[redis]==6.19.0",
+    "stac-fastapi-opensearch[redis,validator]==6.19.0",
     "python-jose==3.5.0",
     "asgi-logger==0.1.0",
     "PyYAML==6.0.3",
@@ -35,6 +35,8 @@ ES_VERIFY_CERTS = {value= "false", skip_if_set = true}
 ROLE_ADMIN = {value = "stac-admin", skip_if_set = true}
 ROLE_EDITOR = {value = "stac-editor", skip_if_set = true}
 OIDC_ISSUER = {value = "https://example.com"}
+RAISE_ON_BULK_ERROR = {value = "true", skip_if_set = true}
+ENABLE_STAC_VALIDATOR = {value = "true", skip_if_set = true}
 
 [build-system]
 requires = ["setuptools", "wheel"]

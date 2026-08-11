@@ -1,6 +1,4 @@
-import pytest
 from httpx import codes
-from pydantic import ValidationError
 
 from .constants import (
     COLLECTION_PROTECTED,
@@ -42,19 +40,20 @@ async def test_bulk_create_validation_error(client, extra_item):
     invalid_item = {
         "this item": "is not a valid item",
         "collection": "terrascope_s2_toc_v2",
+        "id": "dummy_id",
     }
 
-    with pytest.raises(ValidationError):
-        _ = await client.post(
-            str(ENDPOINT_COLLECTIONS / COLLECTION_S2_TOC_V2 / "bulk_items"),
-            json={
-                "items": {
-                    extra_item["id"]: extra_item,
-                    extra_item["id"] + "2": invalid_item,
-                }
-            },
-            auth=MockAuth(ROLE_SENTINEL2),
-        )
+    response = await client.post(
+        str(ENDPOINT_COLLECTIONS / COLLECTION_S2_TOC_V2 / "bulk_items"),
+        json={
+            "items": {
+                extra_item["id"]: extra_item,
+                "dummy_id": invalid_item,
+            }
+        },
+        auth=MockAuth(ROLE_SENTINEL2),
+    )
+    assert response.status_code == codes.BAD_REQUEST
 
 
 async def test_bulk_create_unmatching_collection(client, extra_item):

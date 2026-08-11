@@ -37,8 +37,10 @@ def es_cluster():
             mem_limit=ES_MEM,
             # volumes=[(str(RESOURCES / "elasticsearch.yml"), ES_CONFIG_DST, "rw")],
         ).with_bind_ports(ES_PORT, ES_PORT) as es:
-        # ) as es:
-            logger.info(f"Started ElasticSearch container on: http://{es.get_container_host_ip()}:{es.get_exposed_port(es.port)}")
+            # ) as es:
+            logger.info(
+                f"Started ElasticSearch container on: http://{es.get_container_host_ip()}:{es.get_exposed_port(es.port)}"
+            )
             yield es
     else:
         yield

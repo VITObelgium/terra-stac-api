@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import List, Optional, Union
+from typing import List
 
 import attr
 from fastapi import HTTPException, Request
@@ -10,12 +10,12 @@ from stac_fastapi.core.core import (
     CoreClient,
     TransactionsClient,
 )
+from stac_fastapi.extensions.bulk_transactions import Items
 from stac_fastapi.extensions.transaction.request import (
     PartialCollection,
     PartialItem,
     PatchOperation,
 )
-from stac_fastapi.extensions.bulk_transactions import Items
 from stac_fastapi.types import stac as stac_types
 from stac_fastapi.types.search import BaseSearchPostRequest
 from stac_pydantic import Collection, Item, ItemCollection

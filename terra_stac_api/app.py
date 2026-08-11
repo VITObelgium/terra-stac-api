@@ -81,7 +81,7 @@ search_extensions = [
         )
     ),
     FieldsExtension(),
-    FilterExtension(client=EsAsyncBaseFiltersClient(database=database_logic)),
+    FilterExtension(client=EsAsyncBaseFiltersClient(database=database_logic, settings=settings)),
     QueryExtension(),
     SortExtension(),
     TokenPaginationExtension(),

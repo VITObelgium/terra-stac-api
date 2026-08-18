@@ -1,10 +1,7 @@
-import asyncio
 import logging
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Type, Union
+from typing import Any, Dict, Iterable, List, Optional, Type, Union
 
 import attr
-import orjson
-from fastapi import HTTPException
 from opensearchpy import Search
 from overrides import overrides
 from stac_fastapi.core.serializers import CollectionSerializer
@@ -13,7 +10,6 @@ from stac_fastapi.opensearch.database_logic import (
     ES_COLLECTIONS_MAPPINGS,
     DatabaseLogic,
 )
-from stac_fastapi.sfeos_helpers import filter as filter_module
 from stac_fastapi.types.errors import DatabaseError
 from starlette.requests import Request
 
@@ -92,9 +88,8 @@ class DatabaseLogicAuth(DatabaseLogic):
             q=q,
             filter=filter,
             query=query,
-            datetime=datetime
+            datetime=datetime,
         )
-
 
     async def _refresh(self):
         await self.client.indices.refresh()

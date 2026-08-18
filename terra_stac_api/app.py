@@ -1,4 +1,5 @@
 import logging
+import os
 from contextlib import asynccontextmanager
 
 from asgi_logger import AccessLoggerMiddleware
@@ -8,19 +9,22 @@ from stac_fastapi.api.app import StacApi
 from stac_fastapi.api.middleware import ProxyHeaderMiddleware
 from stac_fastapi.api.models import create_get_request_model, create_post_request_model
 from stac_fastapi.api.routes import Scope
-from stac_fastapi.core.utilities import get_bool_env
-from stac_fastapi.core.extensions import QueryExtension
+from stac_fastapi.core.core import CoreClient
+from stac_fastapi.core.extensions import (
+    CollectionsSearchEndpointExtension,
+    QueryExtension,
+)
 from stac_fastapi.core.extensions.aggregation import (
     EsAggregationExtensionGetRequest,
     EsAggregationExtensionPostRequest,
 )
 from stac_fastapi.core.session import Session
+from stac_fastapi.core.utilities import get_bool_env
 from stac_fastapi.extensions import (
     AggregationExtension,
     BulkTransactionExtension,
     CollectionSearchExtension,
     CollectionSearchFilterExtension,
-    CollectionSearchPostExtension,
     FieldsExtension,
     FilterExtension,
     FreeTextExtension,
@@ -33,7 +37,9 @@ from stac_fastapi.extensions.filter import FilterConformanceClasses
 from stac_fastapi.extensions.free_text import FreeTextConformanceClasses
 from stac_fastapi.extensions.query import QueryConformanceClasses
 from stac_fastapi.extensions.sort import SortConformanceClasses
-from stac_fastapi.opensearch.app import items_get_request_model, collections_get_request_model
+from stac_fastapi.opensearch.app import (
+    items_get_request_model,
+)
 from stac_fastapi.opensearch.config import OpensearchSettings
 from stac_fastapi.opensearch.database_logic import (
     create_collection_index,
@@ -111,7 +117,7 @@ if TRANSACTIONS_EXTENSIONS:
                 database=database_logic, session=session, settings=settings
             ),
             settings=settings,
-        )
+        ),
     )
     search_extensions.insert(
         1,
@@ -121,6 +127,8 @@ if TRANSACTIONS_EXTENSIONS:
             )
         ),
     )
+
+extensions = [aggregation_extension] + search_extensions
 
 collections_get_request_model = None
 if ENABLE_COLLECTIONS_SEARCH or ENABLE_COLLECTIONS_SEARCH_ROUTE:
@@ -168,9 +176,6 @@ if ENABLE_COLLECTIONS_SEARCH_ROUTE:
     )
     extensions.append(collections_search_endpoint_ext)
 
-
-
-extensions = [aggregation_extension] + search_extensions
 database_logic.extensions = [type(ext).__name__ for ext in extensions]
 
 get_request_model = create_get_request_model(search_extensions)

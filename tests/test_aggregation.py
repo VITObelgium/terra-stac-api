@@ -58,7 +58,7 @@ async def test_get_protected_collection_authorized_aggregate(client):
         params={"aggregations": "total_count"},
         auth=MockAuth(ROLE_PROTECTED),
     )
-    assert response.status_code == codes.OK
+    assert response.status_code == codes.OK, response.text
     [agg] = response.json()["aggregations"]
     assert agg["name"] == "total_count"
 

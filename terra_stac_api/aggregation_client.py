@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict
 
 from fastapi import Path
 from overrides import overrides
@@ -8,6 +8,7 @@ from stac_fastapi.core.extensions.aggregation import (
 from stac_fastapi.sfeos_helpers.aggregation import EsAsyncBaseAggregationClient
 from stac_fastapi.types.rfc3339 import DateTimeType
 from stac_pydantic.shared import BBox
+from starlette.requests import Request
 from typing_extensions import Annotated
 
 from terra_stac_api.core import AccessType, ensure_authorized_for_collection
@@ -55,8 +56,14 @@ class AggregationClientAuth(EsAsyncBaseAggregationClient):
     ) -> dict | Exception:
         request: Request = kwargs["request"]
         if collection_id is not None:
-            collections = [str(collection_id)]
-        if collections is not None:
+            await ensure_authorized_for_collection(
+                self.database,
+                request.user,
+                request.auth.scopes,
+                collection_id,
+                AccessType.READ,
+            )
+        elif collections is not None:
             for c in collections:
                 await ensure_authorized_for_collection(
                     self.database,

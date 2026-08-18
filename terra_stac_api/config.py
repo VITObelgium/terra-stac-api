@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     stac_id: str = "terra-stac-api"
     stac_title: str = "terra-stac-api"
     stac_description: str = "STAC API"
+    stac_version: str = "1.1.0"
     cors_allow_origins: List[str] = Field(default_factory=lambda: ["*"])
     cors_allow_methods: List[str] = Field(
         default_factory=lambda: ["OPTIONS", "GET", "POST"]

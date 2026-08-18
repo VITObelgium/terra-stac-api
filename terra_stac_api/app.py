@@ -237,6 +237,7 @@ api = StacApi(
     else [],
     title=app_settings.stac_title,
     description=app_settings.stac_description,
+    stac_version=app_settings.stac_version,
     api_version=terra_stac_api.__version__,
     middlewares=[
         Middleware(BrotliMiddleware),

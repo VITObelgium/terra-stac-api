@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import List, Optional, Union
+from typing import List
 
 import attr
 from fastapi import HTTPException, Request
@@ -10,12 +10,12 @@ from stac_fastapi.core.core import (
     CoreClient,
     TransactionsClient,
 )
-from stac_fastapi.extensions.core.transaction.request import (
+from stac_fastapi.extensions.bulk_transactions import Items
+from stac_fastapi.extensions.transaction.request import (
     PartialCollection,
     PartialItem,
     PatchOperation,
 )
-from stac_fastapi.extensions.third_party.bulk_transactions import Items
 from stac_fastapi.types import stac as stac_types
 from stac_fastapi.types.search import BaseSearchPostRequest
 from stac_pydantic import Collection, Item, ItemCollection
@@ -109,15 +109,16 @@ class CoreClientAuth(CoreClient):
         self,
         collection_id: str,
         request: Request,
-        bbox: Optional[BBox] = None,
-        datetime: Optional[str] = None,
-        limit: Optional[int] = None,
-        sortby: Optional[str] = None,
-        filter_expr: Optional[str] = None,
-        filter_lang: Optional[str] = None,
-        token: Optional[str] = None,
-        query: Optional[str] = None,
-        fields: Optional[List[str]] = None,
+        bbox: BBox | None = None,
+        datetime: str | None = None,
+        limit: int | None = None,
+        sortby: str | None = None,
+        filter_expr: str | None = None,
+        filter_lang: str | None = None,
+        token: str | None = None,
+        query: str | None = None,
+        fields: list[str] | None = None,
+        q: str | list[str] | None = None,
         **kwargs,
     ) -> stac_types.ItemCollection:
         try:
@@ -223,8 +224,8 @@ class TransactionsClientAuth(TransactionsClient):
 
     @overrides
     async def create_item(
-        self, collection_id: str, item: Union[Item, ItemCollection], **kwargs
-    ) -> stac_types.Item:
+        self, collection_id: str, item: Item | ItemCollection, **kwargs
+    ) -> stac_types.Item | str | dict:
         request = kwargs["request"]
         await ensure_authorized_for_collection(
             self.database,
@@ -255,7 +256,7 @@ class TransactionsClientAuth(TransactionsClient):
         self,
         collection_id: str,
         item_id: str,
-        patch: Union[PartialItem, List[PatchOperation]],
+        patch: PartialItem | list[PatchOperation],
         **kwargs,
     ):
         request = kwargs["request"]
@@ -313,7 +314,7 @@ class TransactionsClientAuth(TransactionsClient):
     async def patch_collection(
         self,
         collection_id: str,
-        patch: Union[PartialCollection, List[PatchOperation]],
+        patch: PartialCollection | list[PatchOperation],
         **kwargs,
     ):
         request = kwargs["request"]
@@ -345,7 +346,7 @@ class BulkTransactionsClientAuth(BulkTransactionsClient):
     database: DatabaseLogicAuth
 
     async def bulk_item_insert(
-        self, items: Items, chunk_size: Optional[int] = None, **kwargs
+        self, items: Items, chunk_size: int | None = None, **kwargs
     ) -> str:
         request: Request = kwargs["request"]
         collection_id = request.path_params.get("collection_id")

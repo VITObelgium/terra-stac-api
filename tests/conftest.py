@@ -24,35 +24,35 @@ logger = logging.getLogger(__name__)
 ES_PORT = 9200
 ES_VERSION = "7.17.23"
 ES_MEM = "1G"
-ES_CONFIG_DST = "/usr/share/elasticsearch/config/elasticsearch.yml"
+# ES_CONFIG_DST = "/usr/share/elasticsearch/config/elasticsearch.yml"
 
 
 @pytest.fixture(scope="session", autouse=True)
-def start_es_cluster():
+def es_cluster():
     if not os.environ.get("TEST_IN_JENKINS", False):
-        from testcontainers.elasticsearch import ElasticSearchContainer
+        from testcontainers.community.elasticsearch import ElasticSearchContainer
 
-        class CustomElasticSearchContainer(ElasticSearchContainer):
-            def __init__(self, image, **kwargs) -> None:
-                super().__init__(image, **kwargs)
-                self.with_bind_ports(ES_PORT, ES_PORT)
-
-        with CustomElasticSearchContainer(
-            f"elasticsearch:{ES_VERSION}",
+        with ElasticSearchContainer(
+            image=f"elasticsearch:{ES_VERSION}",
             mem_limit=ES_MEM,
-            volumes=[(str(RESOURCES / "elasticsearch.yml"), ES_CONFIG_DST, "rw")],
-        ) as es:
-            logger.info(f"Started ElasticSearch container on: {es.get_url()}")
-            yield
+            # volumes=[(str(RESOURCES / "elasticsearch.yml"), ES_CONFIG_DST, "rw")],
+        ).with_bind_ports(ES_PORT, ES_PORT) as es:
+            # ) as es:
+            logger.info(
+                f"Started ElasticSearch container on: http://{es.get_container_host_ip()}:{es.get_exposed_port(es.port)}"
+            )
+            yield es
     else:
         yield
 
 
 @pytest.fixture(scope="session")
 def event_loop():
-    loop = asyncio.get_event_loop()
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
     yield loop
     loop.close()
+    asyncio.set_event_loop(None)
 
 
 @pytest.fixture(scope="session")
@@ -61,7 +61,7 @@ def api():
 
 
 @pytest_asyncio.fixture(scope="session")
-async def app(api):
+async def app(api, es_cluster):
     try:
         # clear Elasticsearch on test startup to remove residues of previously failed or aborted tests
         # these indices might not exist, so put in try block

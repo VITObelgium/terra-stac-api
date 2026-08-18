@@ -7,11 +7,14 @@ su jenkins -c "
     set -e
     cd /tmp 
 
-    curl -O https://artifacts.elastic.co/downloads/elasticsearch/$ES_ARCHIVE
-    curl -O https://artifacts.elastic.co/downloads/elasticsearch/$ES_ARCHIVE_SHA512
+    if [[ ! -f $ES_ARCHIVE ]]; then
+      echo "Downloading Elasticsearch $ES_ARCHIVE"
+      curl -O https://artifacts.elastic.co/downloads/elasticsearch/$ES_ARCHIVE
+      curl -O https://artifacts.elastic.co/downloads/elasticsearch/$ES_ARCHIVE_SHA512
 
-    sha512sum -c $ES_ARCHIVE_SHA512
-    tar -xzf $ES_ARCHIVE
+      sha512sum -c $ES_ARCHIVE_SHA512
+      tar -xzf $ES_ARCHIVE
+    fi
 
     # disable security
     cp -f ${WORKSPACE}/tests/resources/elasticsearch.yml $ES/config/elasticsearch.yml

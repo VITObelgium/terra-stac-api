@@ -79,6 +79,10 @@ class DatabaseLogicAuth(DatabaseLogic):
                 query = {}
             query["_auth.read"] = {"in": authorizations}
             # query_parts.append({"terms": {"_auth.read": authorizations}})
+        if sort:
+            for s in sort:
+                if s.get("field") == "title":
+                    s["field"] = "title.keyword"
         return await super().get_all_collections(
             token=token,
             limit=limit,

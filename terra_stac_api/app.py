@@ -152,6 +152,7 @@ if ENABLE_COLLECTIONS_SEARCH or ENABLE_COLLECTIONS_SEARCH_ROUTE:
     collection_search_post_request_model = create_post_request_model(
         collection_search_extensions
     )
+    extensions.append(collection_search_ext)
 
 if ENABLE_COLLECTIONS_SEARCH_ROUTE:
     # Initialize collections-search endpoint extension

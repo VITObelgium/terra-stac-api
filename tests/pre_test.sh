@@ -7,8 +7,8 @@ su jenkins -c "
     set -e
     cd /tmp 
 
-    if [[ ! -f "$ES_ARCHIVE" ]]; then
-      echo "Downloading Elasticsearch $ES_ARCHIVE"
+    if [[ ! -f '$ES_ARCHIVE' ]]; then
+      echo 'Downloading Elasticsearch $ES_ARCHIVE'
       curl -O https://artifacts.elastic.co/downloads/elasticsearch/$ES_ARCHIVE
       curl -O https://artifacts.elastic.co/downloads/elasticsearch/$ES_ARCHIVE_SHA512
 

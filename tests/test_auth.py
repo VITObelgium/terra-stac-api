@@ -1,4 +1,6 @@
+from fastapi.routing import _IncludedRouter
 from httpx import codes
+from starlette.routing import Route
 
 # public endpoints
 unprotected_routes = {
@@ -37,7 +39,7 @@ async def test_route_status(client, api):
     Check all available routes and assume it is either a public route or a route protected with a route dependency.
     This can make us aware of newly introduced routes that may need extra implementation work to enforce authorization.
     """
-    for route in api.app.routes:
+    for route in _iter_routes(api.app.routes):
         for method in route.methods:
             if method == "PATCH":
                 pass
@@ -64,6 +66,16 @@ async def test_route_dependencies(client, api):
     for route, methods in crud_routes.items():
         for method in methods:
             [api_route] = [
-                r for r in api.app.routes if r.path == route and method in r.methods
+                r for r in _iter_routes(api.app.routes) if r.path == route and method in r.methods
             ]
             assert len(api_route.dependencies) >= 1
+
+
+def _iter_routes(routes):
+    for route in routes:
+        if isinstance(route, Route):
+            yield route
+        elif isinstance(route, _IncludedRouter):
+            yield from _iter_routes(route.original_router.routes)
+        else:
+            raise TypeError(f"Unknown route type: {type(route)}")

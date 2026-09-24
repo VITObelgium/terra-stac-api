@@ -196,7 +196,7 @@ async def test_patch_item_unauthorized(client, items, patch):
     assert response.json()["properties"]["title"] == old_title
 
 
-async def test_patch_item_authorized(client, items, patch):
+async def test_patch_item_authorized(client, items, patch, api):
     item = next(iter(items[COLLECTION_S2_TOC_V2]))
     item_endpoint = str(
         ENDPOINT_COLLECTIONS / item["collection"] / "items" / item["id"]
@@ -211,7 +211,9 @@ async def test_patch_item_authorized(client, items, patch):
         json=patch,
         auth=MockAuth(ROLE_SENTINEL2),
     )
-    assert response.status_code == codes.OK
+    assert response.status_code == codes.OK, response.json()
+
+    await api.client.database.client.indices.refresh(index="_all")
 
     # Check aftermath: updated title.
     response = await client.get(item_endpoint)

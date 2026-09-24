@@ -57,7 +57,11 @@ def event_loop():
 
 @pytest.fixture(scope="session")
 def api():
-    return terra_stac_api.app.api
+    api = terra_stac_api.app.instantiate_api(
+        settings=terra_stac_api.app.settings,
+        database_logic=terra_stac_api.app.database_logic,
+    )
+    return api
 
 
 @pytest_asyncio.fixture(scope="session")

@@ -225,7 +225,7 @@ class TransactionsClientAuth(TransactionsClient):
     @overrides
     async def create_item(
         self, collection_id: str, item: Item | ItemCollection, **kwargs
-    ) -> stac_types.Item | str | dict:
+    ) -> stac_types.Item | None:
         request = kwargs["request"]
         await ensure_authorized_for_collection(
             self.database,

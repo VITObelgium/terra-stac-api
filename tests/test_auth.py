@@ -66,7 +66,9 @@ async def test_route_dependencies(client, api):
     for route, methods in crud_routes.items():
         for method in methods:
             [api_route] = [
-                r for r in _iter_routes(api.app.routes) if r.path == route and method in r.methods
+                r
+                for r in _iter_routes(api.app.routes)
+                if r.path == route and method in r.methods
             ]
             assert len(api_route.dependencies) >= 1
 

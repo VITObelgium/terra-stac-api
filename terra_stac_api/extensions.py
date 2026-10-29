@@ -7,15 +7,35 @@ from stac_fastapi.extensions import (
     BulkTransactionExtension,
     TransactionExtension,
 )
+from stac_fastapi.extensions.sort import (
+    CollectionSearchSortExtension,
+    ItemCollectionSortExtension,
+    SearchSortExtension,
+)
 from stac_fastapi.sfeos_helpers.models.extensions import Extensions
 from stac_fastapi.types.extension import ApiExtension
 
 from terra_stac_api.aggregation_client import AggregationClientAuth
 from terra_stac_api.core import BulkTransactionsClientAuth, TransactionsClientAuth
+from terra_stac_api.sortables import SortablesClientAuth
 
 
 class ExtensionsAuth(Extensions):
     """Extension manager with support for authorization checks."""
+
+    def __post_init__(self):
+        sortables_client = SortablesClientAuth(
+            database=self.database_logic,
+            settings=self.settings,
+        )
+        search_sort = SearchSortExtension(client=sortables_client)
+        collection_search_sort = CollectionSearchSortExtension(client=sortables_client)
+        item_collection_sort = ItemCollectionSortExtension(client=sortables_client)
+
+        self.search_map["sort"] = search_sort
+        self.collection_search_map["sort"] = collection_search_sort
+        self.item_collection_map["sort"] = item_collection_sort
+        super().__post_init__()
 
     @property
     def aggregation(self) -> list[ApiExtension]:

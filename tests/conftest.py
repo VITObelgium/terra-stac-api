@@ -1,4 +1,3 @@
-import asyncio
 import json
 import logging
 import os
@@ -7,7 +6,7 @@ from pathlib import Path
 import pytest
 import pytest_asyncio
 from asgi_lifespan import LifespanManager
-from httpx import AsyncClient
+from httpx import AsyncClient, ASGITransport
 from stac_fastapi.opensearch.database_logic import ITEM_INDICES
 
 import terra_stac_api.auth
@@ -47,15 +46,6 @@ def es_cluster():
 
 
 @pytest.fixture(scope="session")
-def event_loop():
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    yield loop
-    loop.close()
-    asyncio.set_event_loop(None)
-
-
-@pytest.fixture(scope="session")
 def api():
     api = terra_stac_api.app.instantiate_api(
         settings=terra_stac_api.app.settings,
@@ -82,7 +72,10 @@ async def app(api, es_cluster):
 
 @pytest_asyncio.fixture(scope="session")
 async def client(app):
-    async with AsyncClient(app=app, base_url="http://test") as tc:
+    async with AsyncClient(
+        transport=ASGITransport(app=app),
+        base_url="http://test"
+    ) as tc:
         yield tc
 
 

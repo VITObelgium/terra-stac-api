@@ -22,6 +22,9 @@ unprotected_routes = {
     "/collections/{collection_id}/queryables": ["GET"],
     "/_mgmt/ping": ["GET"],
     "/_mgmt/health": ["GET"],
+    "/sortables": ["GET"],
+    "/collections/{collection_id}/sortables": ["GET"],
+    "/collections-sortables": ["GET"],
 }
 
 # CRUD endpoints

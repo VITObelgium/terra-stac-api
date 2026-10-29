@@ -1,12 +1,8 @@
-import json
-
 from constants import ROLE_PROTECTED
+
+from .constants import COLLECTION_PROTECTED, COLLECTION_S2_TOC_V2, ENDPOINT_COLLECTIONS
 from .mock_auth import MockAuth
-from .constants import (
-    COLLECTION_S2_TOC_V2,
-COLLECTION_PROTECTED,
-    ENDPOINT_COLLECTIONS
-)
+
 
 async def test_get_sortables(client):
     response = await client.get("/sortables")
@@ -39,6 +35,6 @@ async def test_get_protected_collection_sortables_unauthorized(client):
 async def test_get_protected_collection_sortables_authorized(client):
     response = await client.get(
         str(ENDPOINT_COLLECTIONS / COLLECTION_PROTECTED / "sortables"),
-        auth=MockAuth(ROLE_PROTECTED)
+        auth=MockAuth(ROLE_PROTECTED),
     )
     assert response.status_code == 200

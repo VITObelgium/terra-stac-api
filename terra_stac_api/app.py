@@ -151,8 +151,8 @@ def instantiate_api(
     seen = {id(ext) for ext in application_extensions}
     route_extensions = list(extensions_manager.item_collection)
     if (
-        extensions_manager.collections_search_enabled or
-        extensions_manager.collections_search_route_enabled
+        extensions_manager.collections_search_enabled
+        or extensions_manager.collections_search_route_enabled
     ):
         route_extensions += extensions_manager.get_enabled_extensions(
             "collection_search"

@@ -7,7 +7,11 @@ from stac_fastapi.extensions import (
     BulkTransactionExtension,
     TransactionExtension,
 )
-from stac_fastapi.extensions.sort import SearchSortExtension, CollectionSearchSortExtension, ItemCollectionSortExtension
+from stac_fastapi.extensions.sort import (
+    CollectionSearchSortExtension,
+    ItemCollectionSortExtension,
+    SearchSortExtension,
+)
 from stac_fastapi.sfeos_helpers.models.extensions import Extensions
 from stac_fastapi.types.extension import ApiExtension
 

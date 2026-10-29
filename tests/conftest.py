@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 import pytest_asyncio
 from asgi_lifespan import LifespanManager
-from httpx import AsyncClient
+from httpx import AsyncClient, ASGITransport
 from stac_fastapi.opensearch.database_logic import ITEM_INDICES
 
 import terra_stac_api.auth
@@ -72,7 +72,10 @@ async def app(api, es_cluster):
 
 @pytest_asyncio.fixture(scope="session")
 async def client(app):
-    async with AsyncClient(app=app, base_url="http://test") as tc:
+    async with AsyncClient(
+        transport=ASGITransport(app=app),
+        base_url="http://test"
+    ) as tc:
         yield tc
 
 

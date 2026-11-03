@@ -1,4 +1,9 @@
-from .constants import COLLECTION_PROTECTED, COLLECTION_S2_TOC_V2, ENDPOINT_COLLECTIONS, ROLE_PROTECTED
+from .constants import (
+    COLLECTION_PROTECTED,
+    COLLECTION_S2_TOC_V2,
+    ENDPOINT_COLLECTIONS,
+    ROLE_PROTECTED,
+)
 from .mock_auth import MockAuth
 
 

@@ -19,7 +19,6 @@ from stac_fastapi.core.session import Session
 from stac_fastapi.opensearch.config import OpensearchSettings
 from stac_fastapi.opensearch.database_logic import (
     DatabaseLogic,
-    create_collection_index,
     create_index_templates,
 )
 from stac_fastapi.sfeos_helpers.models.extensions import Extensions
@@ -35,6 +34,7 @@ from terra_stac_api.core import (
 )
 from terra_stac_api.db import DatabaseLogicAuth
 from terra_stac_api.extensions import ExtensionsAuth
+from terra_stac_api.migrations import Migration, ensure_collection_index
 from terra_stac_api.serializer import CustomCollectionSerializer
 
 logger = logging.getLogger(__name__)
@@ -103,8 +103,11 @@ def get_route_dependencies(
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Initialize index templates and the collections index at startup."""
+    if app_settings.migrate_on_startup:
+        await Migration.run_all()
+
     await create_index_templates()
-    await create_collection_index()
+    await ensure_collection_index()
     yield
 
 

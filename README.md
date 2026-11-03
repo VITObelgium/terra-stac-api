@@ -22,7 +22,7 @@ The application can be configured via environment variables. Here is an overview
 | `EDITOR_PUBLIC_COLLECTIONS` | Indicates whether editors can create public collections                  | false              |
 | `RAISE_ON_BULK_ERROR`       | Controls whether bulk insert operations raise exceptions on errors.      | false              |
 | `ES_HTTP_COMPRESS`          | Option to enable HTTP compression.                                       | true               |
-
+| `MIGRATE_ON_STARTUP`        | Migrate outdated index templates and indices on startup.                 | true               |
 
 ## Dependencies
 

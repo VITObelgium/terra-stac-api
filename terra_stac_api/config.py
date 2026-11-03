@@ -20,3 +20,4 @@ class Settings(BaseSettings):
         default_factory=lambda: ["OPTIONS", "GET", "POST"]
     )
     cors_allow_credentials: bool = True
+    migrate_on_startup: bool = True

@@ -48,21 +48,26 @@ class AliasMigration(Migration):
 
     async def run(self):
         async with AsyncOpensearchSettings().create_client as client:
-            async for c in async_scan(
-                client, index=COLLECTIONS_INDEX, query={"query": {"match_all": {}}}
-            ):
-                collection_id = c["_source"]["id"]
-                index_wildcard = f"{ITEMS_INDEX_PREFIX}{collection_id.lower()}*"
-                alias_name = f"{ITEMS_ALIAS_PREFIX}{collection_id}"
-                if not await client.indices.exists_alias(
-                    name=alias_name, index=index_wildcard
+            if await client.indices.exists(index=COLLECTIONS_INDEX):
+                async for c in async_scan(
+                    client, index=COLLECTIONS_INDEX, query={"query": {"match_all": {}}}
                 ):
-                    # get index name for the collection
-                    index_name = list(
-                        (await client.indices.get(index=index_wildcard)).keys()
-                    )[0]
-                    await client.indices.put_alias(index=index_name, name=alias_name)
-                    logger.info("Created alias %s for index %s", alias_name, index_name)
+                    collection_id = c["_source"]["id"]
+                    index_wildcard = f"{ITEMS_INDEX_PREFIX}{collection_id.lower()}*"
+                    alias_name = f"{ITEMS_ALIAS_PREFIX}{collection_id}"
+                    if not await client.indices.exists_alias(
+                        name=alias_name, index=index_wildcard
+                    ):
+                        # get index name for the collection
+                        index_name = list(
+                            (await client.indices.get(index=index_wildcard)).keys()
+                        )[0]
+                        await client.indices.put_alias(
+                            index=index_name, name=alias_name
+                        )
+                        logger.info(
+                            "Created alias %s for index %s", alias_name, index_name
+                        )
 
 
 class LegacyTemplateMigration(Migration):
@@ -87,7 +92,10 @@ class CollectionMappingMigration(Migration):
     async def run(self):
         async with AsyncOpensearchSettings().create_client as client:
             # Check the collections index for the correct mappings and settings, reindex if necessary
-            # This is a placeholder for the actual implementation
+            if not await client.indices.exists_index_template(
+                name=COLLECTIONS_TEMPLATE
+            ):
+                return
             index_templates = await client.indices.get_index_template(
                 name=COLLECTIONS_TEMPLATE
             )

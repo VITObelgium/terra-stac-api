@@ -4,10 +4,10 @@ import attr
 from opensearchpy.helpers import async_scan
 from stac_fastapi.opensearch.config import AsyncOpensearchSettings
 from stac_fastapi.opensearch.database_logic import create_index_templates
+from stac_fastapi.sfeos_helpers.database import index_alias_by_collection_id
 from stac_fastapi.sfeos_helpers.mappings import (
     COLLECTIONS_INDEX,
     ES_COLLECTIONS_MAPPINGS,
-    ITEMS_ALIAS_PREFIX,
     ITEMS_INDEX_PREFIX,
 )
 
@@ -54,7 +54,7 @@ class AliasMigration(Migration):
                 ):
                     collection_id = c["_source"]["id"]
                     index_wildcard = f"{ITEMS_INDEX_PREFIX}{collection_id.lower()}*"
-                    alias_name = f"{ITEMS_ALIAS_PREFIX}{collection_id}"
+                    alias_name = index_alias_by_collection_id(collection_id)
                     if not await client.indices.exists_alias(
                         name=alias_name, index=index_wildcard
                     ):

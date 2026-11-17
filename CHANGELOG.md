@@ -1,3 +1,7 @@
+## [1.3.3] - 2026-11-17
+### 🐛 Fixes
+- Strip unsupported characters from index wildcards in the migration script.
+
 ## [1.3.2] - 2026-11-17
 ### 🐛 Fixes
 - Strip unsupported characters from index alias names in the migration script.
